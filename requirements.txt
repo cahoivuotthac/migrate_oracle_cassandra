@@ -1,0 +1,7 @@
+apache-airflow==2.5.0
+apache-airflow-providers-oracle==2.5.0
+apache-airflow-providers-datastax==2.5.0
+pandas==1.5.0
+sqlalchemy==1.4.39
+cassandra-driver==3.25.0
+pyarrow==8.0.0
