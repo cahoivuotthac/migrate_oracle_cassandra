@@ -21,7 +21,7 @@ def create_connection(conn_id, conn_type, host, schema, login, password, port, s
 def setup_connections():
     # Oracle connection
     create_connection(
-        conn_id='oracle_conn',
+        conn_id='oracle_BTL2',
         conn_type='oracle',
         host='26.93.36.133',
         schema='orcl',
@@ -32,7 +32,7 @@ def setup_connections():
 
     # Cassandra connection
     create_connection(
-        conn_id='cassandra_conn',
+        conn_id='cassandra_BTL2',
         conn_type='cassandra',
         host='localhost',
         schema='etl_data',
