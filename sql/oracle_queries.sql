@@ -1,1 +1,1 @@
-SELECT * FROM KhoSanPham_QLBanHang;
+-- 

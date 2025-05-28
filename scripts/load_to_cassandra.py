@@ -47,7 +47,6 @@ def get_cassandra_session():
 def load_user_data_optimized(user_data):
     try:
         print(f"user_data type: {type(user_data)}")
-        print(f"user_data shape: {user_data.shape if hasattr(user_data, 'shape') else 'No shape'}")
         
         if user_data.empty:
             print("Empty user data, nothing to load")

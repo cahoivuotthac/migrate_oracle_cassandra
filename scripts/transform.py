@@ -46,7 +46,7 @@ def transform_data(data):
         df.columns = df.columns.str.lower()
         
         cols_mapping = {
-            # KhachHang table - keep names matching Cassandra schema
+            # KhachHang table  
             'makhachhang': 'ma_khach_hang',
             'email': 'email',
             'hoten': 'ho_ten',

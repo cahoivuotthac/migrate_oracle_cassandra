@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS danhmuc_sanpham (
 );
 
 -- Data model tables 
-CREATE TABLE products_by_category (
+CREATE TABLE IF NOT EXISTS products_by_category (
     ten_danh_muc text,
     ma_san_pham text,
     ten_san_pham text,
@@ -64,14 +64,14 @@ CREATE TABLE IF NOT EXISTS chi_tiet_hoa_don_by_ma_hoa_don (
     PRIMARY KEY (ma_hoa_don, ma_san_pham)
 );
 
-CREATE TABLE daily_revenue_by_branch (
+CREATE TABLE IF NOT EXISTS daily_revenue_by_branch (
     ma_chi_nhanh int,
     ngay date,
     tong_tien bigint,
     PRIMARY KEY ((ma_chi_nhanh), ngay)
 );
 
-CREATE TABLE product_ratings_by_branch (
+CREATE TABLE IF NOT EXISTS product_ratings_by_branch (
     ma_chi_nhanh int,
     ma_san_pham text,
     ten_san_pham text,
@@ -81,7 +81,7 @@ CREATE TABLE product_ratings_by_branch (
     PRIMARY KEY ((ma_chi_nhanh), ma_san_pham)
 );
 
-CREATE TABLE top_products_by_branch (
+CREATE TABLE IF NOT EXISTS top_products_by_branch (
     ma_chi_nhanh int,
     so_luong_da_ban int,
     ma_san_pham text,
