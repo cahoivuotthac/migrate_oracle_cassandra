@@ -1,5 +1,7 @@
 
 from datetime import datetime, timedelta
+
+import pandas as pd
 from airflow import DAG 
 from airflow.operators.python import PythonOperator
 import sys 
@@ -47,21 +49,49 @@ extract_task = PythonOperator(
 )
 
 # Task 2: Transform the extracted data 
-def transform_data(**kwargs):
-	ti = kwargs['ti']
-	# Get the extracted data from the previous task
-	user_data, product_data, attr_product_data, cat_product_data = ti.xcom_pull(task_ids='extract_data_from_oracle')
-	
-	transformed_user_data = transform_replicated_data(user_data)
-	transformed_product_data = transform_replicated_data(product_data)
-	transformed_attr_product_data = transform_replicated_data(attr_product_data)
-	transformed_cat_product_data = transform_replicated_data(cat_product_data)
-	
-	return transformed_user_data, transformed_product_data, transformed_attr_product_data, transformed_cat_product_data
+def transform_data_task(**kwargs):
+    ti = kwargs['ti']
+    extracted_data = ti.xcom_pull(task_ids='extract_data_from_oracle')
+    
+    print(f"Extracted data type: {type(extracted_data)}")
+    
+    if isinstance(extracted_data, dict):
+        user_data = extracted_data.get('user_data')
+        product_data = extracted_data.get('product_data')
+        attr_product_data = extracted_data.get('attr_product_data')
+        cat_product_data = extracted_data.get('cat_product_data')
+        
+        print(f"User data shape: {user_data.shape if hasattr(user_data, 'shape') else 'No shape'}")
+        print(f"Product data shape: {product_data.shape if hasattr(product_data, 'shape') else 'No shape'}")
+        print(f"Attr data shape: {attr_product_data.shape if hasattr(attr_product_data, 'shape') else 'No shape'}")
+        print(f"Cat data shape: {cat_product_data.shape if hasattr(cat_product_data, 'shape') else 'No shape'}")
+        
+    elif isinstance(extracted_data, (tuple, list)) and len(extracted_data) == 4:
+        user_data, product_data, attr_product_data, cat_product_data = extracted_data
+    else:
+        print(f"Unexpected extracted data format: {type(extracted_data)}")
+        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+    
+    # Transform each dataset individually
+    from transform import transform_data as transform_replicated_data
+    
+    print("Transforming user data...")
+    transformed_user_data = transform_replicated_data(user_data)
+    
+    print("Transforming product data...")
+    transformed_product_data = transform_replicated_data(product_data)
+    
+    print("Transforming attribute data...")
+    transformed_attr_product_data = transform_replicated_data(attr_product_data)
+    
+    print("Transforming category data...")
+    transformed_cat_product_data = transform_replicated_data(cat_product_data)
+    
+    return transformed_user_data, transformed_product_data, transformed_attr_product_data, transformed_cat_product_data
 
 transform_task = PythonOperator(
 	task_id='transform_data',
-	python_callable=transform_data,
+	python_callable=transform_data_task,
 	provide_context=True,
 	dag=dag 
 )

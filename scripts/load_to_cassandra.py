@@ -16,7 +16,9 @@ def get_cassandra_hook():
 	except Exception as e:
 		print(f"Error when getting Cassandra hook: {e}")
 		return None
-  
+ 
+session = None 
+
 try:
 	cluster = get_cassandra_hook()
 	if cluster:
@@ -41,11 +43,12 @@ def load_user_data(user_data):
 				ma_khach_hang, email, ho_ten, sdt, dia_chi, gioi_tinh, ngay_sinh
 			) VALUES (?, ?, ?, ?, ?, ?, ?)
 		"""
-
+		prepared = session.prepare(insert_user_cql)
+  
 		count = 0
 		for _, row in user_data.iterrows():
 			try:
-				session.execute(insert_user_cql, (
+				params = [
 					row['ma_khach_hang'],
 					row['email'],
 					row['ho_ten'],
@@ -53,7 +56,9 @@ def load_user_data(user_data):
 					row['dia_chi'],
 					row['gioi_tinh'],
 					row['ngay_sinh']
-				))
+				]
+				
+				session.execute(prepared, params)
 				count += 1
 	
 			except Exception as e:
@@ -85,17 +90,21 @@ def load_product_data(product_data):
 				ma_san_pham, ten_san_pham, the_loai, gia
 			) VALUES (?, ?, ?, ?)
 		"""
-		
+		prepared = session.prepare(insert_product_cql)
+  
 		count = 0
 		for _, row in product_data.iterrows():
 			try:
 				
-				session.execute(insert_product_cql, [
+				params = [
 					row['ma_san_pham'],
 					row['ten_san_pham'],
 					row['the_loai'],
 					row['gia']
-				])
+				]
+				
+				session.execute(prepared, params)
+	
 				count += 1
 			except Exception as e:
 				print(f"Error inserting product: {e}")
@@ -124,16 +133,18 @@ def load_attr_product_data(attr_product_data):
 				ma_san_pham, ten_thuoc_tinh, gia_tri_thuoc_tinh
 			) VALUES (?, ?, ?)
 		"""
-		
+		prepared = session.prepare(insert_attr_cql)
 		count = 0
 		for _, row in attr_product_data.iterrows():
 			try:
 				
-				session.execute(insert_attr_cql, [
+				params = [
 					row['ma_san_pham'],
 					row['ten_thuoc_tinh'],
 					row['gia_tri_thuoc_tinh']
-				])
+				]
+				
+				session.execute(prepared, params)
 				count += 1
 			except Exception as e:
 				print(f"Error inserting attribute: {e}")
@@ -162,15 +173,17 @@ def load_cat_product_data(cat_product_data):
 				ma_san_pham, ten_danh_muc
 			) VALUES (?, ?)
 		"""
+		prepared = session.prepare(insert_cat_cql)
   
 		count = 0
 		for _, row in cat_product_data.iterrows():
 			try:
 				
-				session.execute(insert_cat_cql, [
+				session.execute(prepared, [
 					row['ma_san_pham'],
 					row['ten_danh_muc']
 				])
+    
 				count += 1
 			except Exception as e:
 				print(f"Error inserting category: {e}")

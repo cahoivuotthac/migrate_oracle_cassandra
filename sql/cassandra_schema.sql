@@ -44,47 +44,47 @@ CREATE TABLE IF NOT EXISTS danhmuc_sanpham (
 );
 
 -- Data model tables 
--- CREATE TABLE products_by_category (
---     ten_danh_muc text,
---     ma_san_pham text,
---     ten_san_pham text,
---     the_loai tinyint,
---     gia bigint,
---     PRIMARY KEY (ten_danh_muc, ma_san_pham)
--- );
+CREATE TABLE products_by_category (
+    ten_danh_muc text,
+    ma_san_pham text,
+    ten_san_pham text,
+    the_loai tinyint,
+    gia bigint,
+    PRIMARY KEY (ten_danh_muc, ma_san_pham)
+);
 
--- CREATE TABLE IF NOT EXISTS chi_tiet_hoa_don_by_ma_hoa_don (
---     ma_hoa_don text,
---     ma_san_pham text,
---     ten_san_pham text,
---     so_luong int,
---     thanh_tien decimal,
---     gia decimal,
---     the_loai text,
---     PRIMARY KEY (ma_hoa_don, ma_san_pham)
--- );
+CREATE TABLE IF NOT EXISTS chi_tiet_hoa_don_by_ma_hoa_don (
+    ma_hoa_don text,
+    ma_san_pham text,
+    ten_san_pham text,
+    so_luong int,
+    thanh_tien decimal,
+    gia decimal,
+    the_loai text,
+    PRIMARY KEY (ma_hoa_don, ma_san_pham)
+);
 
--- CREATE TABLE daily_revenue_by_branch (
---     ma_chi_nhanh int,
---     ngay date,
---     tong_tien bigint,
---     PRIMARY KEY ((ma_chi_nhanh), ngay)
--- );
+CREATE TABLE daily_revenue_by_branch (
+    ma_chi_nhanh int,
+    ngay date,
+    tong_tien bigint,
+    PRIMARY KEY ((ma_chi_nhanh), ngay)
+);
 
--- CREATE TABLE product_ratings_by_branch (
---     ma_chi_nhanh int,
---     ma_san_pham text,
---     ten_san_pham text,
---     tong_danh_gia int,
---     tong_sao float,
---     avg_sao float,
---     PRIMARY KEY ((ma_chi_nhanh), ma_san_pham)
--- );
+CREATE TABLE product_ratings_by_branch (
+    ma_chi_nhanh int,
+    ma_san_pham text,
+    ten_san_pham text,
+    tong_danh_gia int,
+    tong_sao float,
+    avg_sao float,
+    PRIMARY KEY ((ma_chi_nhanh), ma_san_pham)
+);
 
--- CREATE TABLE top_products_by_branch (
---     ma_chi_nhanh int,
---     so_luong_da_ban int,
---     ma_san_pham text,
---     ten_san_pham text,
---     PRIMARY KEY ((ma_chi_nhanh), so_luong_da_ban, ma_san_pham)
--- ) WITH CLUSTERING ORDER BY (so_luong_da_ban DESC);
+CREATE TABLE top_products_by_branch (
+    ma_chi_nhanh int,
+    so_luong_da_ban int,
+    ma_san_pham text,
+    ten_san_pham text,
+    PRIMARY KEY ((ma_chi_nhanh), so_luong_da_ban, ma_san_pham)
+) WITH CLUSTERING ORDER BY (so_luong_da_ban DESC);

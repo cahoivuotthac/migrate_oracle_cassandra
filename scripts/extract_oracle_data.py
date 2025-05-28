@@ -2,6 +2,10 @@ import pandas as pd
 import json
 from datetime import datetime
 from airflow.providers.oracle.hooks.oracle import OracleHook
+from airflow.configuration import conf
+
+# Enable pickle for XCom serialization
+conf.set('core', 'enable_xcom_pickling', 'True')
 
 def get_oracle_hook():
     try: 
