@@ -9,8 +9,8 @@ connections:
     port: 1521
   
   cassandra_db:
-    conn_type: cassandra
-    host: localhost
+    conn_id: cassandra_BTL2 
+    host: cassandra
     port: 9042
     schema: etl_data
     login: 
