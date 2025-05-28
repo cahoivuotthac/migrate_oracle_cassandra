@@ -4,6 +4,8 @@ from cassandra.cluster import Cluster
 import traceback
 from cassandra.concurrent import execute_concurrent_with_args
 
+BATCH_SIZE=500
+
 def get_cassandra_cluster():
 	try: 
 		cluster = Cluster(
@@ -78,12 +80,11 @@ def load_user_data_optimized(user_data):
                 parameters_list.append(params)
             
             # Execute in smaller batches for better performance and reliability
-            batch_size = 500  # Reduced batch size
-            total_batches = len(parameters_list) // batch_size + (1 if len(parameters_list) % batch_size else 0)
+            total_batches = len(parameters_list) // BATCH_SIZE + (1 if len(parameters_list) % BATCH_SIZE else 0)
             
-            for i in range(0, len(parameters_list), batch_size):
-                batch_params = parameters_list[i:i + batch_size]
-                print(f"Processing user batch {i//batch_size + 1}/{total_batches}")
+            for i in range(0, len(parameters_list), BATCH_SIZE):
+                batch_params = parameters_list[i:i + BATCH_SIZE]
+                print(f"Processing user batch {i//BATCH_SIZE + 1}/{total_batches}")
                 
                 # Use concurrent execution with error handling
                 results = execute_concurrent_with_args(
@@ -138,13 +139,12 @@ def load_product_data_optimized(product_data):
                 ]
                 parameters_list.append(params)
             
-            # Batch execution
-            batch_size = 500
-            total_batches = len(parameters_list) // batch_size + (1 if len(parameters_list) % batch_size else 0)
+            # Batch excution
+            total_batches = len(parameters_list) // BATCH_SIZE + (1 if len(parameters_list) % BATCH_SIZE else 0)
             
-            for i in range(0, len(parameters_list), batch_size):
-                batch_params = parameters_list[i:i + batch_size]
-                print(f"Processing product batch {i//batch_size + 1}/{total_batches}")
+            for i in range(0, len(parameters_list), BATCH_SIZE):
+                batch_params = parameters_list[i:i + BATCH_SIZE]
+                print(f"Processing product batch {i//BATCH_SIZE + 1}/{total_batches}")
                 
                 results = execute_concurrent_with_args(
                     session, 
@@ -194,12 +194,11 @@ def load_attr_product_data_optimized(attr_product_data):
                 parameters_list.append(params)
             
             # Batch execution
-            batch_size = 500
-            total_batches = len(parameters_list) // batch_size + (1 if len(parameters_list) % batch_size else 0)
+            total_batches = len(parameters_list) // BATCH_SIZE + (1 if len(parameters_list) % BATCH_SIZE else 0)
             
-            for i in range(0, len(parameters_list), batch_size):
-                batch_params = parameters_list[i:i + batch_size]
-                print(f"Processing attribute batch {i//batch_size + 1}/{total_batches}")
+            for i in range(0, len(parameters_list), BATCH_SIZE):
+                batch_params = parameters_list[i:i + BATCH_SIZE]
+                print(f"Processing attribute batch {i//BATCH_SIZE + 1}/{total_batches}")
                 
                 results = execute_concurrent_with_args(
                     session, 
@@ -248,12 +247,11 @@ def load_cat_product_data_optimized(cat_product_data):
                 parameters_list.append(params)
             
             # Batch execution
-            batch_size = 500
-            total_batches = len(parameters_list) // batch_size + (1 if len(parameters_list) % batch_size else 0)
+            total_batches = len(parameters_list) // BATCH_SIZE + (1 if len(parameters_list) % BATCH_SIZE else 0)
             
-            for i in range(0, len(parameters_list), batch_size):
-                batch_params = parameters_list[i:i + batch_size]
-                print(f"Processing category batch {i//batch_size + 1}/{total_batches}")
+            for i in range(0, len(parameters_list), BATCH_SIZE):
+                batch_params = parameters_list[i:i + BATCH_SIZE]
+                print(f"Processing category batch {i//BATCH_SIZE + 1}/{total_batches}")
                 
                 results = execute_concurrent_with_args(
                     session, 
