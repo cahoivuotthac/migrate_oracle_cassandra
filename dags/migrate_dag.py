@@ -14,7 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 from extract_oracle_data import extract_replicated_data
 from transform import transform_data
 from setup_connections import setup_connections 
-from load_to_cassandra import load_user_data, load_product_data, load_attr_product_data, load_cat_product_data
+from load_to_cassandra import load_user_data_optimized, load_product_data_optimized, load_attr_product_data_optimized, load_cat_product_data_optimized
 
 default_args = {
 	'owner': 'hienfaang',
@@ -110,17 +110,24 @@ def load_data(**kwargs):
         print(f"Attribute data type: {type(transformed_attr_product_data)}")
         print(f"Category data type: {type(transformed_cat_product_data)}")
         
+        from load_to_cassandra import (
+            load_user_data_optimized, 
+            load_product_data_optimized, 
+            load_attr_product_data_optimized, 
+            load_cat_product_data_optimized
+        )
+        
         print("Loading user data...")
-        load_user_data(transformed_user_data)
+        load_user_data_optimized(transformed_user_data)
         
         print("Loading product data...")
-        load_product_data(transformed_product_data)
+        load_product_data_optimized(transformed_product_data)
         
         print("Loading attribute data...")
-        load_attr_product_data(transformed_attr_product_data)
+        load_attr_product_data_optimized(transformed_attr_product_data)
         
         print("Loading category data...")
-        load_cat_product_data(transformed_cat_product_data)
+        load_cat_product_data_optimized(transformed_cat_product_data)
         
         print("All data loaded successfully to Cassandra")
   

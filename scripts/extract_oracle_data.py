@@ -84,3 +84,11 @@ def extract_replicated_data():
     }
   
     return result
+
+def extract_products_by_cateogry():
+    products_by_cateogry = pd.DataFrame()
+    
+    query = """
+        SELECT 
+        
+    """
