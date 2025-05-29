@@ -1,6 +1,5 @@
 import pandas as pd
 import json
-from datetime import datetime
 from airflow.providers.oracle.hooks.oracle import OracleHook
 from airflow.configuration import conf
 
@@ -29,6 +28,11 @@ def execute_query(query):
         return pd.DataFrame()
 
 def extract_replicated_data():
+    
+    if not oracle_hook:
+        print("Oracle hook not available for invoice data")
+        return pd.DataFrame()
+    
     user_data = pd.DataFrame()
     product_data = pd.DataFrame()
     attr_product_data = pd.DataFrame()
@@ -85,10 +89,103 @@ def extract_replicated_data():
   
     return result
 
-def extract_products_by_cateogry():
-    products_by_cateogry = pd.DataFrame()
+def extract_invoice_data():
+    if not oracle_hook:
+        print("Oracle hook not available for invoice data")
+        return pd.DataFrame()
     
-    query = """
+    invoice_query = """
         SELECT 
-        
+            hd."MaKhachHang",
+            cthd."MaHoaDon",
+            cthd."MaSanPham",
+            cthd."SoLuong",
+            cthd."ThanhTien",
+            hd."TongTien",
+            hd."NgayTao",
+            hd."PhuongThucThanhToan",
+            hd."MaNhanVien"
+        FROM "BTL1"."ChiTietHoaDon" cthd 
+            JOIN "BTL1"."HoaDon" hd ON cthd."MaHoaDon" = hd."MaHoaDon"
+            JOIN "BTL1"."KhachHang" kh ON hd."MaKhachHang" = kh."MaKhachHang"
+        ORDER BY cthd."MaHoaDon", hd."NgayTao" DESC
     """
+    
+    print("Extracting invoice data...")
+    return execute_query(invoice_query)
+
+def extract_revenue_data():
+    if not oracle_hook:
+        print("Oracle hook not available for revenue data")
+        return pd.DataFrame()
+    
+    revenue_query = """
+        SELECT 
+            cn."MaChiNhanh",
+            TRUNC(hd."NgayTao") AS Ngay,
+            SUM(hd."TongTien") AS TongTien
+        FROM "BTL1"."HoaDon" hd 
+            JOIN "BTL1"."NhanVien" nv ON hd."MaNhanVien" = nv."MaNhanVien"
+            JOIN "BTL1"."ChiNhanh" cn ON cn."MaChiNhanh" = nv."MaChiNhanh"
+        GROUP BY cn."MaChiNhanh", TRUNC(hd."NgayTao")
+        ORDER BY Ngay DESC
+    """
+    
+    print("Extracting revenue data...")
+    return execute_query(revenue_query)
+
+def extract_warehouse_data():
+    if not oracle_hook:
+        print("Oracle hook not available for warehouse data")
+        return pd.DataFrame()
+    
+    warehouse_query = """
+        SELECT 
+            kspq."MaChiNhanh",
+            kspq."MaSanPham",
+            sp."TenSanPham",
+            kspqh."TinhTrang",
+            kspqh."TongSoLuongDanhGia",
+            kspqh."TongSoLuongDaBan",
+            kspq."SoLuong"
+        FROM "BTL1"."KhoSanPham_QLBanHang" kspqh, 
+             "BTL1"."KhoSanPham_QLKho" kspq, 
+             "BTL1"."SanPham" sp
+        WHERE  kspqh."MaSanPham" = kspq."MaSanPham" 
+          AND sp."MaSanPham" =  kspq."MaSanPham"
+        ORDER BY  kspq."MaSanPham",  kspq."SoLuong"
+    """
+    
+    print("Extracting warehouse data...")
+    return execute_query(warehouse_query)
+
+def extract_customer_data():
+    if not oracle_hook:
+        print("Oracle hook not available for customer data")
+        return pd.DataFrame()
+    
+    cus_query = """
+        SELECT 
+          nv."MaChiNhanh",
+          TRUNC(hd."NgayTao") AS Ngay,
+          COUNT(DISTINCT hd."MaKhachHang") AS SoLuongKhachHang
+        FROM "BTL1"."NhanVien" nv
+          JOIN "BTL1"."HoaDon" hd ON nv."MaNhanVien" = hd."MaNhanVien"
+        GROUP BY nv."MaChiNhanh", TRUNC(hd."NgayTao")
+        ORDER BY Ngay DESC
+    """
+    
+    print("Extracting customer data...")
+    return execute_query(cus_query)
+
+def extract_branch_data():
+    print("Starting separated data extraction...")
+    
+    result = {
+        'invoice_data': extract_invoice_data(),
+        'revenue_data': extract_revenue_data(),
+        'warehouse_data': extract_warehouse_data(),
+        'cus_data': extract_customer_data()
+    }
+    
+    return result

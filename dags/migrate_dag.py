@@ -11,10 +11,9 @@ import os
 sys.path.append('/opt/airflow/scripts')
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
-from extract_oracle_data import extract_replicated_data
-from transform import transform_data
+from extract_oracle_data import extract_replicated_data, extract_branch_data
+from transform import transform_replicated_data, transform_branch_data
 from setup_connections import setup_connections 
-from load_to_cassandra import load_user_data_optimized, load_product_data_optimized, load_attr_product_data_optimized, load_cat_product_data_optimized
 
 default_args = {
 	'owner': 'hienfaang',
@@ -36,44 +35,48 @@ dag = DAG(
 )
 
 setup_conn_task = PythonOperator(
-	task_id='setup_connections',
+	task_id='setup_db_connections',
 	python_callable=setup_connections,
 	dag=dag
 )
 
 # Task 1: Extract data from Oracle
-extract_task = PythonOperator(
-	task_id='extract_data_from_oracle',
+extract_replicated_task = PythonOperator(
+	task_id='01_extract_replicated_data_from_oracle',
 	python_callable=extract_replicated_data,
+	dag=dag 
+)
+
+extract_branch_task = PythonOperator(
+	task_id='02_extract_branch_data_from_oracle',
+	python_callable=extract_branch_data,
 	dag=dag 
 )
 
 # Task 2: Transform the extracted data 
 def transform_data_task(**kwargs):
     ti = kwargs['ti']
-    extracted_data = ti.xcom_pull(task_ids='extract_data_from_oracle')
+    replicated_data = ti.xcom_pull(task_ids='01_extract_replicated_data_from_oracle')
+    branch_data = ti.xcom_pull(task_ids='02_extract_branch_data_from_oracle')
     
-    print(f"Extracted data type: {type(extracted_data)}")
-    
-    if isinstance(extracted_data, dict):
-        user_data = extracted_data.get('user_data')
-        product_data = extracted_data.get('product_data')
-        attr_product_data = extracted_data.get('attr_product_data')
-        cat_product_data = extracted_data.get('cat_product_data')
+    print(f"Extracted replicated data type: {type(replicated_data)}")
+    print(f"Extracted branch data type: {type(branch_data)}")
+     
+    if isinstance(replicated_data, dict):
+        user_data = replicated_data.get('user_data')
+        product_data = replicated_data.get('product_data')
+        attr_product_data = replicated_data.get('attr_product_data')
+        cat_product_data = replicated_data.get('cat_product_data')
         
-        print(f"User data shape: {user_data.shape if hasattr(user_data, 'shape') else 'No shape'}")
-        print(f"Product data shape: {product_data.shape if hasattr(product_data, 'shape') else 'No shape'}")
-        print(f"Attr data shape: {attr_product_data.shape if hasattr(attr_product_data, 'shape') else 'No shape'}")
-        print(f"Cat data shape: {cat_product_data.shape if hasattr(cat_product_data, 'shape') else 'No shape'}")
-        
-    elif isinstance(extracted_data, (tuple, list)) and len(extracted_data) == 4:
-        user_data, product_data, attr_product_data, cat_product_data = extracted_data
+    elif isinstance(replicated_data, (tuple, list)) and len(replicated_data) == 4:
+        user_data, product_data, attr_product_data, cat_product_data = replicated_data
     else:
-        print(f"Unexpected extracted data format: {type(extracted_data)}")
-        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
+        print(f"Unexpected replicated data format: {type(replicated_data)}")
+        user_data = product_data = attr_product_data = cat_product_data = pd.DataFrame()
     
-    # Transform each dataset individually
-    from transform import transform_data as transform_replicated_data
+    if not isinstance(branch_data, dict):
+        print(f"Unexpected branch data format: {type(branch_data)}")
+        branch_data = {}
     
     print("Transforming user data...")
     transformed_user_data = transform_replicated_data(user_data)
@@ -87,7 +90,19 @@ def transform_data_task(**kwargs):
     print("Transforming category data...")
     transformed_cat_product_data = transform_replicated_data(cat_product_data)
     
-    return transformed_user_data, transformed_product_data, transformed_attr_product_data, transformed_cat_product_data
+    print("Transforming branch data...")
+    transformed_branch_data = transform_branch_data(branch_data)
+    
+    return {
+        'user_data': transformed_user_data,
+        'product_data': transformed_product_data,
+        'attr_product_data': transformed_attr_product_data,
+        'cat_product_data': transformed_cat_product_data,
+        'invoice_data': transformed_branch_data.get('invoice_data', pd.DataFrame()),
+        'revenue_data': transformed_branch_data.get('revenue_data', pd.DataFrame()),
+        'warehouse_data': transformed_branch_data.get('warehouse_data', pd.DataFrame()),
+        'cus_data': transformed_branch_data.get('cus_data', pd.DataFrame())
+    }
 
 transform_task = PythonOperator(
 	task_id='transform_data',
@@ -98,41 +113,52 @@ transform_task = PythonOperator(
 
 # Task 3: Load the transformed data to Cassandra
 def load_data(**kwargs):
-    ti = kwargs['ti']
-    
-    transformed_data = ti.xcom_pull(task_ids='transform_data')
-    
-    if isinstance(transformed_data, tuple) and len(transformed_data) == 4:
-        transformed_user_data, transformed_product_data, transformed_attr_product_data, transformed_cat_product_data = transformed_data
-        
-        print(f"User data type: {type(transformed_user_data)}")
-        print(f"Product data type: {type(transformed_product_data)}")
-        print(f"Attribute data type: {type(transformed_attr_product_data)}")
-        print(f"Category data type: {type(transformed_cat_product_data)}")
-        
-        from load_to_cassandra import (
-            load_user_data_optimized, 
-            load_product_data_optimized, 
-            load_attr_product_data_optimized, 
-            load_cat_product_data_optimized
-        )
-        
-        print("Loading user data...")
-        load_user_data_optimized(transformed_user_data)
-        
-        print("Loading product data...")
-        load_product_data_optimized(transformed_product_data)
-        
-        print("Loading attribute data...")
-        load_attr_product_data_optimized(transformed_attr_product_data)
-        
-        print("Loading category data...")
-        load_cat_product_data_optimized(transformed_cat_product_data)
-        
-        print("All data loaded successfully to Cassandra")
+	ti = kwargs['ti']
+	
+	transformed_data = ti.xcom_pull(task_ids='transform_data')
+	
+	if isinstance(transformed_data, dict):
+	   
+		from load_to_cassandra import (
+			load_user_data_optimized, 
+			load_product_data_optimized, 
+			load_attr_product_data_optimized, 
+			load_cat_product_data_optimized,
+			load_invoice_details_data_optimized,
+			load_revenue_data_optimized,
+			load_wh_data_optimized,
+			load_cus_data_optimized
+		)
+		
+		print("Loading user data...")
+		load_user_data_optimized(transformed_data.get('user_data'))
+		
+		print("Loading product data...")
+		load_product_data_optimized(transformed_data.get('product_data'))
+		
+		print("Loading attribute data...")
+		load_attr_product_data_optimized(transformed_data.get('attr_product_data'))
+		
+		print("Loading category data...")
+		load_cat_product_data_optimized(transformed_data.get('cat_product_data'))
+		
+		print("Loading invoice data...")
+		load_invoice_details_data_optimized(transformed_data.get('invoice_data'))
+		
+		print("Loading revenue data...")
+		load_revenue_data_optimized(transformed_data.get('revenue_data'))
+		
+		print("Loading warehouse data...")
+		load_wh_data_optimized(transformed_data.get('warehouse_data'))
+		
+		print("Loading customer data...")
+		load_cus_data_optimized(transformed_data.get('cus_data'))
+		
   
-    else:
-        print(f"Unexpected data format from transform task: {type(transformed_data)}")
+		print("All data loaded successfully to Cassandra")
+  
+	else:
+		print(f"Unexpected data format from transform task: {type(transformed_data)}")
 	
 load_task = PythonOperator(
 	task_id='load_data_to_cassandra',
@@ -142,4 +168,4 @@ load_task = PythonOperator(
 )
 
 # Set the task dependencies
-setup_conn_task >> extract_task >> transform_task >> load_task
+setup_conn_task >> [extract_replicated_task, extract_branch_task] >> transform_task >> load_task
