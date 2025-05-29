@@ -2,10 +2,13 @@
 from datetime import datetime, timedelta
 
 import pandas as pd
-from airflow import DAG 
-from airflow.operators.python import PythonOperator
 import sys 
 import os 
+
+from airflow import DAG 
+from airflow.operators.python import PythonOperator
+from airflow.exceptions import AirflowSkipException
+from airflow.operators.python import BranchPythonOperator
 
 # Add scripts directory to path to import modules
 sys.path.append('/opt/airflow/scripts')
@@ -52,6 +55,27 @@ extract_branch_task = PythonOperator(
 	python_callable=extract_branch_data,
 	dag=dag 
 )
+
+# def validate_data_task(**context):
+#     # Get data from previous task
+#     extracted_data = context['task_instance'].xcom_pull(task_ids='extract_data_task')
+    
+#     if not extracted_data:
+#         raise AirflowSkipException("No data extracted - stopping DAG")
+    
+#     # Check if any dataset is empty
+#     empty_datasets = [key for key, data in extracted_data.items() if data.empty]
+    
+#     if empty_datasets:
+#         raise AirflowSkipException(f"Empty datasets found: {empty_datasets} - stopping DAG")
+    
+#     return 'continue_processing_task'
+
+# validate_nonempty_data_task = BranchPythonOperator(
+#     task_id='validate_nonempty_extracted_data',
+#     python_callable=validate_data_task,
+#     dag=dag
+# )
 
 # Task 2: Transform the extracted data 
 def transform_data_task(**kwargs):
@@ -112,7 +136,7 @@ transform_task = PythonOperator(
 )
 
 # Task 3: Load the transformed data to Cassandra
-def load_data(**kwargs):
+def load_replicated_data(**kwargs):
 	ti = kwargs['ti']
 	
 	transformed_data = ti.xcom_pull(task_ids='transform_data')
@@ -123,49 +147,70 @@ def load_data(**kwargs):
 			load_user_data_optimized, 
 			load_product_data_optimized, 
 			load_attr_product_data_optimized, 
-			load_cat_product_data_optimized,
+			load_cat_product_data_optimized
+		)
+		
+		print("Loading khachang data ...")
+		load_user_data_optimized(transformed_data.get('user_data'))
+		
+		print("Loading sanpham data ...")
+		load_product_data_optimized(transformed_data.get('product_data'))
+		
+		print("Loading thuoctinh_sanpham data ...")
+		load_attr_product_data_optimized(transformed_data.get('attr_product_data'))
+		
+		print("Loading danhmuc_sanpham data ...")
+		load_cat_product_data_optimized(transformed_data.get('cat_product_data'))
+		
+		print("All data is loaded successfully to Cassandra")
+  
+	else:
+		print(f"Unexpected data format from transform task: {type(transformed_data)}")
+
+def load_branch_data(**kwargs):
+	ti = kwargs['ti']
+	
+	transformed_data = ti.xcom_pull(task_ids='transform_data')
+	
+	if isinstance(transformed_data, dict):
+	   
+		from load_to_cassandra import (
 			load_invoice_details_data_optimized,
 			load_revenue_data_optimized,
 			load_wh_data_optimized,
 			load_cus_data_optimized
 		)
 		
-		print("Loading user data...")
-		load_user_data_optimized(transformed_data.get('user_data'))
-		
-		print("Loading product data...")
-		load_product_data_optimized(transformed_data.get('product_data'))
-		
-		print("Loading attribute data...")
-		load_attr_product_data_optimized(transformed_data.get('attr_product_data'))
-		
-		print("Loading category data...")
-		load_cat_product_data_optimized(transformed_data.get('cat_product_data'))
-		
-		print("Loading invoice data...")
+		print("Loading chi_tiet_hoa_don_theo_ma_kh data ...")
 		load_invoice_details_data_optimized(transformed_data.get('invoice_data'))
 		
-		print("Loading revenue data...")
+		print("Loading doanh_thu_moi_ngay_theo_ma_cn data...")
 		load_revenue_data_optimized(transformed_data.get('revenue_data'))
 		
-		print("Loading warehouse data...")
+		print("Loading kho_sp_theo_ma_cn data...")
 		load_wh_data_optimized(transformed_data.get('warehouse_data'))
 		
-		print("Loading customer data...")
+		print("Loading sl_khach_hang_moi_ngay_theo_ma_cn data...")
 		load_cus_data_optimized(transformed_data.get('cus_data'))
 		
-  
-		print("All data loaded successfully to Cassandra")
+		print("All data is loaded successfully to Cassandra")
   
 	else:
 		print(f"Unexpected data format from transform task: {type(transformed_data)}")
-	
-load_task = PythonOperator(
-	task_id='load_data_to_cassandra',
-	python_callable=load_data,
+  	
+load_replicated_task = PythonOperator(
+	task_id='01_load_replicated_data_to_cassandra',
+	python_callable=load_replicated_data,
+	provide_context=True,
+	dag=dag
+)
+
+load_branch_task = PythonOperator(
+	task_id='02_load_branch_data_to_cassandra',
+	python_callable=load_branch_data,
 	provide_context=True,
 	dag=dag
 )
 
 # Set the task dependencies
-setup_conn_task >> [extract_replicated_task, extract_branch_task] >> transform_task >> load_task
+setup_conn_task >> [extract_replicated_task, extract_branch_task] >> transform_task >> [load_replicated_task, load_branch_task]

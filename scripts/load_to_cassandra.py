@@ -4,7 +4,7 @@ from cassandra.cluster import Cluster
 import traceback
 from cassandra.concurrent import execute_concurrent_with_args
 
-BATCH_SIZE=500
+BATCH_SIZE=1000
 
 def get_cassandra_cluster():
 	try: 
@@ -78,7 +78,7 @@ def load_user_data_optimized(user_data):
 				]
 				parameters_list.append(params)
 			
-			load_in_batches(parameters_list, session, prepared)	
+			load_data_in_batches(parameters_list, session, prepared)	
 
 			print(f"Successfully processed {len(parameters_list)} users to Cassandra")
 		
@@ -117,7 +117,7 @@ def load_product_data_optimized(product_data):
 				]
 				parameters_list.append(params)
 			
-			load_in_batches(parameters_list, session, prepared)	
+			load_data_in_batches(parameters_list, session, prepared)	
 			
 			print(f"Successfully processed {len(parameters_list)} products to Cassandra")
 	except Exception as e:
@@ -154,7 +154,7 @@ def load_attr_product_data_optimized(attr_product_data):
 				]
 				parameters_list.append(params)
 			
-			load_in_batches(parameters_list, session, prepared)		
+			load_data_in_batches(parameters_list, session, prepared)		
 			
 			print(f"Successfully processed {len(parameters_list)} attributes to Cassandra")
 	except Exception as e:
@@ -190,14 +190,14 @@ def load_cat_product_data_optimized(cat_product_data):
 				]
 				parameters_list.append(params)
 			
-			load_in_batches(parameters_list, session, prepared)	
+			load_data_in_batches(parameters_list, session, prepared)	
 			
 			print(f"Successfully processed {len(parameters_list)} categories to Cassandra")
 	except Exception as e:
 		print(f"Error loading categories to Cassandra: {e}")
 		traceback.print_exc()
 
-def load_in_batches(params_list, session, prepared, concurrency=25):
+def load_data_in_batches(params_list, session, prepared, concurrency=25):
 	try: 
 		total_batches = len(params_list) // BATCH_SIZE + (1 if len(params_list) % BATCH_SIZE else 0)
 				
@@ -213,10 +213,26 @@ def load_in_batches(params_list, session, prepared, concurrency=25):
 				raise_on_first_error=False
 			)
 			
+			errors = []
+			for j, (success, result) in enumerate(results):
+				if not success:
+					batch_index = i + j
+					error_msg = str(result) if result else "Unknown error"
+					print(f"Error at record {batch_index}: {error_msg}")
+					if batch_index < len(params_list):
+						print(f"Failed parameters: {params_list[batch_index]}")
+					errors.append(result)
+			
+			if errors:
+				print(f"Errors in batch: {len(errors)}")
+				# Print first few errors for debugging
+				for idx, error in enumerate(errors[:3]):  # Show first 3 errors
+					print(f"Error {idx + 1}: {error}")
+		
 		print(f"Successfully processed {len(params_list)} categories to Cassandra")
 	except Exception as e: 
 		print(f"Error: {e}")
-
+			
 def load_invoice_details_data_optimized(invoice_data):
 	print(f"invoice_data of type {type(invoice_data)}")
 	if not isinstance(invoice_data, pd.DataFrame):
@@ -255,7 +271,7 @@ def load_invoice_details_data_optimized(invoice_data):
 				]
 				params_list.append(params)
 
-			load_in_batches(params_list, session, prepared_stmt)
+			load_data_in_batches(params_list, session, prepared_stmt)
 		
 	except Exception as e:
 		print(f"Error loading categories to Cassandra: {e}")
@@ -294,7 +310,7 @@ def load_revenue_data_optimized(revenue_data):
 				]
 				params_list.append(params)
 
-			load_in_batches(params_list, session, prepared_stmt)
+			load_data_in_batches(params_list, session, prepared_stmt)
 		
 	except Exception as e:
 		print(f"Error loading to Cassandra: {e}")
@@ -341,7 +357,7 @@ def load_wh_data_optimized(wh_data):
 				]
 				params_list.append(params)
 
-			load_in_batches(params_list, session, prepared_stmt)
+			load_data_in_batches(params_list, session, prepared_stmt)
 		
 	except Exception as e:
 		print(f"Error loading to Cassandra: {e}")
@@ -380,7 +396,7 @@ def load_cus_data_optimized(cus_data):
 				]
 				params_list.append(params)
 
-			load_in_batches(params_list, session, prepared_stmt)
+			load_data_in_batches(params_list, session, prepared_stmt)
 		
 	except Exception as e:
 		print(f"Error loading to Cassandra: {e}")

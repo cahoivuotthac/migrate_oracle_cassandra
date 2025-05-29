@@ -16,7 +16,12 @@ oracle_hook = get_oracle_hook()
 
 def execute_query(query):
     try: 
-        data = pd.read_sql(query, oracle_hook.get_conn())
+        data = pd.read_sql(
+            query, 
+            oracle_hook.get_conn(),
+            # encoding='utf-8'
+        )
+        
         print(f"Successfully extracted {len(data)} rows from Oracle")
         if len(data) > 0:
             print(f"Columns: {data.columns.tolist()}")
@@ -122,13 +127,13 @@ def extract_revenue_data():
     revenue_query = """
         SELECT 
             cn."MaChiNhanh",
-            TRUNC(hd."NgayTao") AS Ngay,
-            SUM(hd."TongTien") AS TongTien
+            TRUNC(hd."NgayTao") AS "Ngay",
+            SUM(hd."TongTien") AS "TongTien"
         FROM "BTL1"."HoaDon" hd 
             JOIN "BTL1"."NhanVien" nv ON hd."MaNhanVien" = nv."MaNhanVien"
             JOIN "BTL1"."ChiNhanh" cn ON cn."MaChiNhanh" = nv."MaChiNhanh"
         GROUP BY cn."MaChiNhanh", TRUNC(hd."NgayTao")
-        ORDER BY Ngay DESC
+        ORDER BY TRUNC(hd."NgayTao") DESC
     """
     
     print("Extracting revenue data...")
@@ -179,13 +184,24 @@ def extract_customer_data():
     return execute_query(cus_query)
 
 def extract_branch_data():
-    print("Starting separated data extraction...")
+    try: 
+        print("Starting separated data extraction...")
+        
+        result = {
+            'invoice_data': extract_invoice_data(),
+            'revenue_data': extract_revenue_data(),
+            'warehouse_data': extract_warehouse_data(),
+            'cus_data': extract_customer_data()
+        }
+        
+        print("All data extraction completed successfully")
+        return result
     
-    result = {
-        'invoice_data': extract_invoice_data(),
-        'revenue_data': extract_revenue_data(),
-        'warehouse_data': extract_warehouse_data(),
-        'cus_data': extract_customer_data()
-    }
-    
-    return result
+    except Exception as e: 
+        print(f"Error during branch daa extraction: {e}")
+        return {
+            'invoice_data': pd.DataFrame(),
+            'revenue_data': pd.DataFrame(),
+            'warehouse_data': pd.DataFrame(),
+            'cus_data': pd.DataFrame()
+        }

@@ -140,7 +140,14 @@ def transform_branch_data(separated_data):
             if 'ngay_tao' in invoice_df.columns:
                 invoice_df['ngay_tao'] = pd.to_datetime(invoice_df['ngay_tao'], errors='coerce')
             
-            numeric_cols = ['so_luong', 'thanh_tien', 'tong_tien']
+            numeric_cols = [
+                'so_luong', 
+                'thanh_tien', 
+                'tong_tien', 
+                'ma_khach_hang',
+                'ma_san_pham',
+                'ma_hoa_don'
+            ]
             for col in numeric_cols:
                 if col in invoice_df.columns:
                     invoice_df[col] = pd.to_numeric(invoice_df[col], errors='coerce').fillna(0)

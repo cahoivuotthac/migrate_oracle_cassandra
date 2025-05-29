@@ -56,15 +56,15 @@ CREATE TABLE IF NOT EXISTS danhmuc_sanpham (
 -- );
 
 CREATE TABLE IF NOT EXISTS chi_tiet_hoa_don_theo_ma_kh (
-    ma_khach_hang TEXT,
-    ma_hoa_don TEXT,
-    ma_san_pham TEXT,
-    so_luong INT,
+    ma_khach_hang int,
+    ma_hoa_don int,
+    ma_san_pham int,
+    so_luong int,
     thanh_tien bigint,
     tong_tien bigint,
-    ngay_tao TIMESTAMP,
-    phuong_thuc_thanh_toan TEXT,
-    ma_nhan_vien TEXT,
+    ngay_tao timestamp,
+    phuong_thuc_thanh_toan text,
+    ma_nhan_vien text,
     PRIMARY KEY ((ma_khach_hang), ngay_tao, ma_hoa_don)
 ) WITH CLUSTERING ORDER BY (ngay_tao DESC);
 
