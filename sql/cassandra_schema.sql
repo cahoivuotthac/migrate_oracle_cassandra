@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS chi_tiet_hoa_don_theo_ma_kh (
     tong_tien bigint,
     ngay_tao timestamp,
     phuong_thuc_thanh_toan text,
-    ma_nhan_vien text,
+    ma_nhan_vien int,
     PRIMARY KEY ((ma_khach_hang), ngay_tao, ma_hoa_don)
 ) WITH CLUSTERING ORDER BY (ngay_tao DESC);
 
