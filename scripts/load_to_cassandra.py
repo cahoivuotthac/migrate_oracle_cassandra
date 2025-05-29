@@ -274,7 +274,7 @@ def load_in_batches(params_list, session, prepared, concurrency=25):
 			
 	for i in range(0, len(params_list), BATCH_SIZE):
 		batch_params = params_list[i:i + BATCH_SIZE]
-		print(f"Processing category batch {i//BATCH_SIZE + 1}/{total_batches}")
+		print(f"Processing batch {i//BATCH_SIZE + 1}/{total_batches}")
 		
 		results = execute_concurrent_with_args(
 			session, 
@@ -395,9 +395,9 @@ def load_wh_data_optimized(wh_data):
 					ma_san_pham,
 					ten_san_pham,
 					tinh_trang,
-					tong_sl_danh_gia,
-					tong_sl_da_ban,
-					tong_sl_ton_kho
+					tong_so_luong_danh_gia,
+					tong_so_luong_da_ban,
+					tong_so_luong_ton_kho
 				) VALUES (?, ?, ?, ?, ?, ?, ?)
 			""")
 
@@ -408,9 +408,9 @@ def load_wh_data_optimized(wh_data):
 					row['ma_san_pham'],
 					row['ten_san_pham'],
 					row['tinh_trang'],
-					row['tong_sl_danh_gia'],
-					row['tong_sl_da_ban'],
-					row['tong_sl_ton_kho']
+					row['tong_so_luong_danh_gia'],
+					row['tong_so_luong_da_ban'],
+					row['tong_so_luong_ton_kho']
 				]
 				params_list.append(params)
 

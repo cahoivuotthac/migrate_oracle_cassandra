@@ -180,12 +180,12 @@ def transform_branch_data(separated_data):
                 'tinhtrang': 'tinh_trang',
                 'tongsoluongdanhgia': 'tong_so_luong_danh_gia',
                 'tongsoluongdaban': 'tong_so_luong_da_ban',
-                'soluong': 'so_luong'
+                'soluong': 'tong_so_luong_ton_kho'
             }
             
             warehouse_df.rename(columns=warehouse_mapping, inplace=True)
             
-            numeric_cols = ['tong_so_luong_danh_gia', 'tong_so_luong_da_ban', 'so_luong']
+            numeric_cols = ['tong_so_luong_danh_gia', 'tong_so_luong_da_ban', 'tong_so_luong_ton_kho']
             for col in numeric_cols:
                 if col in warehouse_df.columns:
                     warehouse_df[col] = pd.to_numeric(warehouse_df[col], errors='coerce').fillna(0)
