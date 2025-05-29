@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS danhmuc_sanpham (
 CREATE TABLE IF NOT EXISTS chi_tiet_hoa_don_theo_ma_kh (
     ma_khach_hang int,
     ma_hoa_don int,
-    ma_san_pham int,
+    ma_san_pham text,
     so_luong int,
     thanh_tien bigint,
     tong_tien bigint,

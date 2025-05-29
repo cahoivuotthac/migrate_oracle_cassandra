@@ -145,7 +145,6 @@ def transform_branch_data(separated_data):
                 'thanh_tien', 
                 'tong_tien', 
                 'ma_khach_hang',
-                'ma_san_pham',
                 'ma_hoa_don'
             ]
             for col in numeric_cols:
