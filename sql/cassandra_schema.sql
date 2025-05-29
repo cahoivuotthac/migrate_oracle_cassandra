@@ -80,10 +80,10 @@ CREATE TABLE IF NOT EXISTS kho_sp_theo_ma_cn (
     ma_san_pham text,
     ten_san_pham text,
     tinh_trang text, 
-    tong_sl_danh_gia int,
-    tong_sl_da_ban int,
-    tong_sl_ton_kho int,
-    PRIMARY KEY ((ma_chi_nhanh), ma_san_pham, tong_sl_ton_kho)
+    tong_so_luong_danh_gia int,
+    tong_so_luong_da_ban int,
+    tong_so_luong_ton_kho int,
+    PRIMARY KEY ((ma_chi_nhanh), ma_san_pham, tong_so_luong_ton_kho)
 );
 
 CREATE TABLE IF NOT EXISTS sl_khach_hang_moi_ngay_theo_ma_cn (

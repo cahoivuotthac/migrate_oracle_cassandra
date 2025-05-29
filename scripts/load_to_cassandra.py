@@ -78,28 +78,7 @@ def load_user_data_optimized(user_data):
 				]
 				parameters_list.append(params)
 			
-			# Execute in smaller batches for better performance and reliability
-			total_batches = len(parameters_list) // BATCH_SIZE + (1 if len(parameters_list) % BATCH_SIZE else 0)
-			
-			for i in range(0, len(parameters_list), BATCH_SIZE):
-				batch_params = parameters_list[i:i + BATCH_SIZE]
-				print(f"Processing user batch {i//BATCH_SIZE + 1}/{total_batches}")
-				
-				# Use concurrent execution with error handling
-				results = execute_concurrent_with_args(
-					session, 
-					prepared, 
-					batch_params,
-					concurrency=25,  # Reduced concurrency
-					raise_on_first_error=False
-				)
-				
-				# Check for errors in batch
-				errors = [r for success, r in results if not success]
-				if errors:
-					print(f"Errors in batch: {len(errors)}")
-					for error in errors[:5]:  # Show first 5 errors
-						print(f"Error: {error}")
+			load_in_batches(parameters_list, session, prepared)	
 
 			print(f"Successfully processed {len(parameters_list)} users to Cassandra")
 		
@@ -138,24 +117,7 @@ def load_product_data_optimized(product_data):
 				]
 				parameters_list.append(params)
 			
-			# Batch excution
-			total_batches = len(parameters_list) // BATCH_SIZE + (1 if len(parameters_list) % BATCH_SIZE else 0)
-			
-			for i in range(0, len(parameters_list), BATCH_SIZE):
-				batch_params = parameters_list[i:i + BATCH_SIZE]
-				print(f"Processing product batch {i//BATCH_SIZE + 1}/{total_batches}")
-				
-				results = execute_concurrent_with_args(
-					session, 
-					prepared, 
-					batch_params,
-					concurrency=25,
-					raise_on_first_error=False
-				)
-				
-				errors = [r for success, r in results if not success]
-				if errors:
-					print(f"Errors in batch: {len(errors)}")
+			load_in_batches(parameters_list, session, prepared)	
 			
 			print(f"Successfully processed {len(parameters_list)} products to Cassandra")
 	except Exception as e:
@@ -192,24 +154,7 @@ def load_attr_product_data_optimized(attr_product_data):
 				]
 				parameters_list.append(params)
 			
-			# Batch execution
-			total_batches = len(parameters_list) // BATCH_SIZE + (1 if len(parameters_list) % BATCH_SIZE else 0)
-			
-			for i in range(0, len(parameters_list), BATCH_SIZE):
-				batch_params = parameters_list[i:i + BATCH_SIZE]
-				print(f"Processing attribute batch {i//BATCH_SIZE + 1}/{total_batches}")
-				
-				results = execute_concurrent_with_args(
-					session, 
-					prepared, 
-					batch_params,
-					concurrency=25,
-					raise_on_first_error=False
-				)
-				
-				errors = [r for success, r in results if not success]
-				if errors:
-					print(f"Errors in batch: {len(errors)}")
+			load_in_batches(parameters_list, session, prepared)		
 			
 			print(f"Successfully processed {len(parameters_list)} attributes to Cassandra")
 	except Exception as e:
@@ -245,24 +190,7 @@ def load_cat_product_data_optimized(cat_product_data):
 				]
 				parameters_list.append(params)
 			
-			# Batch execution
-			total_batches = len(parameters_list) // BATCH_SIZE + (1 if len(parameters_list) % BATCH_SIZE else 0)
-			
-			for i in range(0, len(parameters_list), BATCH_SIZE):
-				batch_params = parameters_list[i:i + BATCH_SIZE]
-				print(f"Processing category batch {i//BATCH_SIZE + 1}/{total_batches}")
-				
-				results = execute_concurrent_with_args(
-					session, 
-					prepared, 
-					batch_params,
-					concurrency=25,
-					raise_on_first_error=False
-				)
-				
-				errors = [r for success, r in results if not success]
-				if errors:
-					print(f"Errors in batch: {len(errors)}")
+			load_in_batches(parameters_list, session, prepared)	
 			
 			print(f"Successfully processed {len(parameters_list)} categories to Cassandra")
 	except Exception as e:
@@ -270,26 +198,25 @@ def load_cat_product_data_optimized(cat_product_data):
 		traceback.print_exc()
 
 def load_in_batches(params_list, session, prepared, concurrency=25):
-	total_batches = len(params_list) // BATCH_SIZE + (1 if len(params_list) % BATCH_SIZE else 0)
+	try: 
+		total_batches = len(params_list) // BATCH_SIZE + (1 if len(params_list) % BATCH_SIZE else 0)
+				
+		for i in range(0, len(params_list), BATCH_SIZE):
+			batch_params = params_list[i:i + BATCH_SIZE]
+			print(f"Processing batch {i//BATCH_SIZE + 1}/{total_batches}")
 			
-	for i in range(0, len(params_list), BATCH_SIZE):
-		batch_params = params_list[i:i + BATCH_SIZE]
-		print(f"Processing batch {i//BATCH_SIZE + 1}/{total_batches}")
-		
-		results = execute_concurrent_with_args(
-			session, 
-			prepared, 
-			batch_params,
-			concurrency,
-			raise_on_first_error=False
-		)
-		
-		errors = [r for success, r in results if not success]
-		if errors:
-			print(f"Errors in batch: {len(errors)}")
-	
-	print(f"Successfully processed {len(params_list)} categories to Cassandra")
- 
+			results = execute_concurrent_with_args(
+				session, 
+				prepared, 
+				batch_params,
+				concurrency,
+				raise_on_first_error=False
+			)
+			
+		print(f"Successfully processed {len(params_list)} categories to Cassandra")
+	except Exception as e: 
+		print(f"Error: {e}")
+
 def load_invoice_details_data_optimized(invoice_data):
 	print(f"invoice_data of type {type(invoice_data)}")
 	if not isinstance(invoice_data, pd.DataFrame):
@@ -321,8 +248,8 @@ def load_invoice_details_data_optimized(invoice_data):
 					row['ma_san_pham'],
 					row['so_luong'],
 					row['thanh_tien'],
-					row['tong_tien'],
-					row['ngay_tao'],
+					row['tong_tien'], 
+					pd.to_datetime(row['ngay_tao']).to_pydatetime(),
 					row['phuong_thuc_thanh_toan'],
 					row['ma_nhan_vien']
 				]
