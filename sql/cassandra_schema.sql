@@ -6,7 +6,7 @@
 
 CREATE KEYSPACE IF NOT EXISTS BTL2_data
 WITH REPLICATION = {
-    'class': 'SimpleStrategy',
+    'class': 'SimpleStrategy', -- data to be spread across the entire cluster 
     'replication_factor': 1
 };
 
@@ -44,17 +44,6 @@ USE BTL2_data;
 -- );
 
 -- Data model tables 
--- CREATE TABLE IF NOT EXISTS chi_tiet_san_pham_theo_ma_sp ( 
---     ma_san_pham TEXT,
---     ten_san_pham TEXT,
---     gia INT,
---     the_loai INT,
---     ten_danh_muc TEXT,
---     ten_thuoc_tinh TEXT,
---     gia_tri_thuoc_tinh TEXT,
---     PRIMARY KEY (ma_san_pham, ten_thuoc_tinh)
--- );
-
 CREATE TABLE IF NOT EXISTS chi_tiet_hoa_don_theo_ma_kh (
     ma_khach_hang int,
     ma_hoa_don int,

@@ -1,16 +1,4 @@
 -- For Cassandra's data model tables 
--- chi_tiet_san_pham_theo_ma_sp
--- SELECT 
---     sp."MaSanPham",
---     sp."TenSanPham",
---     sp."Gia",
---     sp."TheLoai",
---     dmsp."TenDanhMuc",
---     ttsp."TenThuocTinh",
---     ttsp."GiaTriThuocTinh"
--- FROM BTL1."SanPham" sp, BTL1."DanhMuc_SanPham" dmsp, BTL1."ThuocTinh_SanPham" ttsp
--- WHERE sp."MaSanPham" = dmsp."MaSanPham" AND sp."MaSanPham" = ttsp."MaSanPham"
-
 -- chi_tiet_hoa_don_theo_ma_kh
 SELECT 
   hd."MaKhachHang",

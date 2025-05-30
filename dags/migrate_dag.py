@@ -44,14 +44,14 @@ setup_conn_task = PythonOperator(
 )
 
 # Task 1: Extract data from Oracle
-extract_replicated_task = PythonOperator(
-	task_id='01_extract_replicated_data_from_oracle',
-	python_callable=extract_replicated_data,
-	dag=dag 
-)
+# extract_replicated_task = PythonOperator(
+# 	task_id='01_extract_replicated_data_from_oracle',
+# 	python_callable=extract_replicated_data,
+# 	dag=dag 
+# )
 
-extract_branch_task = PythonOperator(
-	task_id='02_extract_branch_data_from_oracle',
+extract_data_task = PythonOperator(
+	task_id='extract_data_from_oracle',
 	python_callable=extract_branch_data,
 	dag=dag 
 )
@@ -198,19 +198,19 @@ def load_branch_data(**kwargs):
 	else:
 		print(f"Unexpected data format from transform task: {type(transformed_data)}")
   	
-load_replicated_task = PythonOperator(
-	task_id='01_load_replicated_data_to_cassandra',
-	python_callable=load_replicated_data,
-	provide_context=True,
-	dag=dag
-)
+# load_replicated_task = PythonOperator(
+# 	task_id='01_load_replicated_data_to_cassandra',
+# 	python_callable=load_replicated_data,
+# 	provide_context=True,
+# 	dag=dag
+# )
 
-load_branch_task = PythonOperator(
-	task_id='02_load_branch_data_to_cassandra',
+load_data_task= PythonOperator(
+	task_id='load_data_to_cassandra',
 	python_callable=load_branch_data,
 	provide_context=True,
 	dag=dag
 )
 
 # Set the task dependencies
-setup_conn_task >> [extract_replicated_task, extract_branch_task] >> transform_task >> [load_replicated_task, load_branch_task]
+setup_conn_task >> extract_data_task >> transform_task >> load_data_task
