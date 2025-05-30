@@ -1,4 +1,4 @@
-FROM apache/airflow:latest
+FROM apache/airflow:2.5.0
 
 USER airflow
 
@@ -6,8 +6,7 @@ USER airflow
 RUN pip install --no-cache-dir \
     apache-airflow-providers-oracle \
 	cassandra-driver \
-    oracledb \
-	cx_Oracle 
+    oracledb 
 
 RUN pip install --no-cache-dir --no-deps \
 	apache-airflow-providers-apache-cassandra

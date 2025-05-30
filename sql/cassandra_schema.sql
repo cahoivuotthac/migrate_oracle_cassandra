@@ -4,44 +4,44 @@
 -- Execute the script
 -- docker exec -it cassandra cqlsh -f /tmp/cassandra_schema.sql
 
-CREATE KEYSPACE IF NOT EXISTS etl_data
+CREATE KEYSPACE IF NOT EXISTS BTL2_data
 WITH REPLICATION = {
     'class': 'SimpleStrategy',
     'replication_factor': 1
 };
 
-USE etl_data;
+USE BTL2_data;
 
 -- Bảng nhân bản 
-CREATE TABLE IF NOT EXISTS khachhang (
-  ma_khach_hang int PRIMARY KEY,
-  email text,
-  ho_ten text,
-  sdt text,
-  dia_chi text,
-  ngay_sinh date,
-  gioi_tinh text
-);
+-- CREATE TABLE IF NOT EXISTS khachhang (
+--   ma_khach_hang int PRIMARY KEY,
+--   email text,
+--   ho_ten text,
+--   sdt text,
+--   dia_chi text,
+--   ngay_sinh date,
+--   gioi_tinh text
+-- );
 
-CREATE TABLE IF NOT EXISTS sanpham (
-  ma_san_pham text PRIMARY KEY,
-  ten_san_pham text,
-  the_loai int,
-  gia bigint
-);
+-- CREATE TABLE IF NOT EXISTS sanpham (
+--   ma_san_pham text PRIMARY KEY,
+--   ten_san_pham text,
+--   the_loai int,
+--   gia bigint
+-- );
 
-CREATE TABLE IF NOT EXISTS thuoctinh_sanpham (
-  ma_san_pham text,
-  ten_thuoc_tinh text,
-  gia_tri_thuoc_tinh text,
-  PRIMARY KEY (ma_san_pham, ten_thuoc_tinh)
-);
+-- CREATE TABLE IF NOT EXISTS thuoctinh_sanpham (
+--   ma_san_pham text,
+--   ten_thuoc_tinh text,
+--   gia_tri_thuoc_tinh text,
+--   PRIMARY KEY (ma_san_pham, ten_thuoc_tinh)
+-- );
 
-CREATE TABLE IF NOT EXISTS danhmuc_sanpham (
-  ma_san_pham text,
-  ten_danh_muc text,
-  PRIMARY KEY (ma_san_pham, ten_danh_muc)
-);
+-- CREATE TABLE IF NOT EXISTS danhmuc_sanpham (
+--   ma_san_pham text,
+--   ten_danh_muc text,
+--   PRIMARY KEY (ma_san_pham, ten_danh_muc)
+-- );
 
 -- Data model tables 
 -- CREATE TABLE IF NOT EXISTS chi_tiet_san_pham_theo_ma_sp ( 

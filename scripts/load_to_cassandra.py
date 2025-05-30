@@ -30,7 +30,7 @@ def get_cassandra_session():
 		cluster = get_cassandra_cluster()
 		if cluster:
 			session = cluster.connect()
-			session.execute("USE etl_data")
+			session.execute("USE BTL2_data")
 			session.default_timeout = 60  # Increase timeout for large operations
 			yield session
 		else:
@@ -58,7 +58,7 @@ def load_user_data_optimized(user_data):
 				return
 
 			insert_user_cql = """
-				INSERT INTO etl_data.khachhang (
+				INSERT INTO BTL2_data.khachhang (
 					ma_khach_hang, email, ho_ten, sdt, dia_chi, gioi_tinh, ngay_sinh
 				) VALUES (?, ?, ?, ?, ?, ?, ?)
 			"""
@@ -101,7 +101,7 @@ def load_product_data_optimized(product_data):
 				return
 
 			insert_product_cql = """
-				INSERT INTO etl_data.sanpham (
+				INSERT INTO BTL2_data.sanpham (
 					ma_san_pham, ten_san_pham, the_loai, gia
 				) VALUES (?, ?, ?, ?)
 			"""
@@ -139,7 +139,7 @@ def load_attr_product_data_optimized(attr_product_data):
 				return
 
 			insert_attr_cql = """
-				INSERT INTO etl_data.thuoctinh_sanpham (
+				INSERT INTO BTL2_data.thuoctinh_sanpham (
 					ma_san_pham, ten_thuoc_tinh, gia_tri_thuoc_tinh
 				) VALUES (?, ?, ?)
 			"""
@@ -176,7 +176,7 @@ def load_cat_product_data_optimized(cat_product_data):
 				return
 
 			insert_cat_cql = """
-				INSERT INTO etl_data.danhmuc_sanpham (
+				INSERT INTO BTL2_data.danhmuc_sanpham (
 					ma_san_pham, ten_danh_muc
 				) VALUES (?, ?)
 			"""
@@ -250,7 +250,7 @@ def load_invoice_details_data_optimized(invoice_data):
 				return
 
 			prepared_stmt = session.prepare("""
-				INSERT INTO etl_data.chi_tiet_hoa_don_theo_ma_kh (
+				INSERT INTO BTL2_data.chi_tiet_hoa_don_theo_ma_kh (
 					ma_khach_hang, ma_hoa_don, ma_san_pham, so_luong,
 					thanh_tien, tong_tien, ngay_tao, phuong_thuc_thanh_toan, ma_nhan_vien
 				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -294,7 +294,7 @@ def load_revenue_data_optimized(revenue_data):
 				return
 
 			prepared_stmt = session.prepare("""
-				INSERT INTO etl_data.doanh_thu_moi_ngay_theo_ma_cn (
+				INSERT INTO BTL2_data.doanh_thu_moi_ngay_theo_ma_cn (
 					ma_chi_nhanh,
 					ngay,
 					tong_tien
@@ -333,7 +333,7 @@ def load_wh_data_optimized(wh_data):
 				return
 
 			prepared_stmt = session.prepare("""
-				INSERT INTO etl_data.kho_sp_theo_ma_cn (
+				INSERT INTO BTL2_data.kho_sp_theo_ma_cn (
 					ma_chi_nhanh,
 					ma_san_pham,
 					ten_san_pham,
@@ -380,7 +380,7 @@ def load_cus_data_optimized(cus_data):
 				return
 
 			prepared_stmt = session.prepare("""
-				INSERT INTO etl_data.sl_khach_hang_moi_ngay_theo_ma_cn (
+				INSERT INTO BTL2_data.sl_khach_hang_moi_ngay_theo_ma_cn (
 					ma_chi_nhanh,
 					ngay,
 					so_luong_khach_hang
