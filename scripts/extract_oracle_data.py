@@ -79,7 +79,7 @@ def extract_revenue_branch_data():
     print("Extracting revenue data...")
     df = execute_query(revenue_query)
     return {
-        'revenue_data': df
+        'revenue_branch_data': df
     }
 
 def extract_warehouse_data():

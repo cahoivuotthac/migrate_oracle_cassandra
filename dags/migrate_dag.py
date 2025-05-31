@@ -15,7 +15,7 @@ sys.path.append('/opt/airflow/scripts')
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
 from extract_oracle_data import extract_invoice_data, extract_revenue_branch_data, extract_warehouse_data, extract_customer_data, extract_doanh_thu_sp_quy_cn, extract_doanh_thu_thang_nv_cn
-from transform import transform_invoice_data, transform_revenue_data, transform_warehouse_data, transform_customer_data, transform_revenue_sp_quy_cn, transform_revenue_thang_nv_cn
+from transform import transform_invoice_data, transform_revenue_branch_data, transform_warehouse_data, transform_customer_data, transform_revenue_sp_quy_cn, transform_revenue_thang_nv_cn
 from setup_connections import setup_connections 
 
 default_args = {
@@ -128,11 +128,11 @@ def transformed_revenue_data(**kwargs):
 	print("Transforming data...")
 	
 	return {
-		'revenue_data': transform_revenue_data(input_data)
+		'revenue_data': transform_revenue_branch_data(input_data)
 	}
 	
-transform_revenue_data_op = PythonOperator(
-	task_id='transform_revenue_data',
+transform_revenue_branch_data_op = PythonOperator(
+	task_id='transform_revenue_branch_data',
 	python_callable=transformed_revenue_data,
 	provide_context=True,
 	dag=dag 
@@ -261,7 +261,7 @@ load_invoice_data_op = PythonOperator(
 
 def load_revenue_data(**kwargs):
     ti = kwargs['ti']
-    revenue_data = ti.xcom_pull(task_ids='transform_revenue_data')
+    revenue_data = ti.xcom_pull(task_ids='transform_revenue_branch_data')
     
     print("Loading doanh_thu_moi_ngay_theo_ma_cn data...")
     if revenue_data and 'revenue_data' in revenue_data:
@@ -384,7 +384,7 @@ verification_op = PythonOperator(
 setup_connections_op >> [extract_invoice_data_op, extract_revenue_brnach_data_op, extract_warehouse_data_op, extract_customer_data_op, extract_revenue_product_data_op, extract_revenue_employee_data_op]
 
 extract_invoice_data_op >> transform_invoice_data_op >> load_invoice_data_op
-extract_revenue_brnach_data_op >> transform_revenue_data_op >> load_revenue_branch_data_op
+extract_revenue_brnach_data_op >> transform_revenue_branch_data_op >> load_revenue_branch_data_op
 extract_warehouse_data_op >> transform_warehouse_data_op >> load_warehouse_data_op
 extract_customer_data_op >> transform_customer_data_op >> load_customer_data_op
 extract_revenue_product_data_op >> transform_revenue_product_data_op >> load_revenue_product_op

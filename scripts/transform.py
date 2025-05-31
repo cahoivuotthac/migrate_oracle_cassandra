@@ -64,7 +64,7 @@ def transform_invoice_data(invoice_df):
 	
 	return transform_data(invoice_df, 'invoice_data', num_cols, None, datetime_cols, invoice_mapping)
 
-def transform_revenue_data(revenue_df):
+def transform_revenue_branch_data(revenue_df):
 	revenue_mapping = {
 		'machinhanh': 'ma_chi_nhanh',
 		'ngay': 'ngay',
@@ -74,7 +74,7 @@ def transform_revenue_data(revenue_df):
 	datetime_cols = ['ngay']
 	num_cols = ['tong_tien']
 	
-	return transform_data(revenue_df, 'revenue_data', num_cols, None, datetime_cols, revenue_mapping)
+	return transform_data(revenue_df, 'revenue_branch_data', num_cols, None, datetime_cols, revenue_mapping)
 
 def transform_warehouse_data(warehouse_df):
 	warehouse_mapping = {
