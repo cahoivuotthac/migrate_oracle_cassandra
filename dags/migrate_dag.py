@@ -14,8 +14,8 @@ from airflow.operators.python import BranchPythonOperator
 sys.path.append('/opt/airflow/scripts')
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
-from extract_oracle_data import extract_invoice_data, extract_revenue_data, extract_warehouse_data, extract_customer_data
-from transform import transform_invoice_data, transform_revenue_data, transform_warehouse_data, transform_customer_data
+from extract_oracle_data import extract_invoice_data, extract_revenue_branch_data, extract_warehouse_data, extract_customer_data, extract_doanh_thu_sp_quy_cn, extract_doanh_thu_thang_nv_cn
+from transform import transform_invoice_data, transform_revenue_data, transform_warehouse_data, transform_customer_data, transform_revenue_sp_quy_cn, transform_revenue_thang_nv_cn
 from setup_connections import setup_connections 
 
 default_args = {
@@ -50,9 +50,9 @@ extract_invoice_data_op = PythonOperator(
 	dag=dag 
 )
 
-extract_revenue_data_op = PythonOperator(
-	task_id='extract_revenue_data',
-	python_callable=extract_revenue_data,
+extract_revenue_brnach_data_op = PythonOperator(
+	task_id='extract_revenue_branch_data',
+	python_callable=extract_revenue_branch_data,
 	dag=dag 
 )
 
@@ -65,6 +65,18 @@ extract_warehouse_data_op = PythonOperator(
 extract_customer_data_op = PythonOperator(
 	task_id='extract_customer_data',
 	python_callable=extract_customer_data,
+	dag=dag 
+)
+
+extract_revenue_product_data_op = PythonOperator(
+	task_id='extract_revenue_sp_data',
+	python_callable=extract_doanh_thu_sp_quy_cn,
+	dag=dag 
+)
+
+extract_revenue_employee_data_op = PythonOperator(
+	task_id='extract_revenue_nv_data',
+	python_callable=extract_doanh_thu_thang_nv_cn,
 	dag=dag 
 )
 
@@ -162,6 +174,71 @@ transform_customer_data_op = PythonOperator(
 	dag=dag 
 )
 
+def transformed_revenue_product_data(**kwargs):
+    ti = kwargs['ti']
+   
+    input_data = ti.xcom_pull(task_ids='extract_revenue_sp_data') 
+    print(f"Extracted data type: {type(input_data)}")
+    print(f"Extracted data keys: {input_data.keys() if input_data else 'None'}")
+    print("Transforming data...")
+    
+    if input_data and 'doanh_thu_sp_quy_cn_data' in input_data:
+        df = input_data['doanh_thu_sp_quy_cn_data']
+        print(f"DataFrame shape: {df.shape if hasattr(df, 'shape') else 'Not a DataFrame'}")
+        
+        if hasattr(df, 'empty') and not df.empty:
+            transformed_df = transform_revenue_sp_quy_cn(df)
+            return {
+                'doanh_thu_sp_quy_cn_data': transformed_df
+            }
+        else:
+            print("DataFrame is empty")
+            return {'doanh_thu_sp_quy_cn_data': {}}
+    else:
+        print("No input data found for revenue product transformation")
+        print(f"Available keys: {list(input_data.keys()) if input_data else 'None'}")
+        return {'doanh_thu_sp_quy_cn_data': {}}
+	
+transform_revenue_product_data_op = PythonOperator(
+	task_id='transform_revenue_sp_data',
+	python_callable=transformed_revenue_product_data,
+	provide_context=True,
+	dag=dag 
+)
+
+def transformed_revenue_employee_data(**kwargs):
+    ti = kwargs['ti']
+   
+    input_data = ti.xcom_pull(task_ids='extract_revenue_nv_data') 
+    print(f"Extracted data type: {type(input_data)}")
+    print(f"Extracted data keys: {input_data.keys() if input_data else 'None'}")
+    print("Transforming data...")
+    
+    # Fixed: Check for the correct key that extraction returns
+    if input_data and 'doanh_thu_thang_nv_cn_data' in input_data:
+        df = input_data['doanh_thu_thang_nv_cn_data']
+        print(f"DataFrame shape: {df.shape if hasattr(df, 'shape') else 'Not a DataFrame'}")
+        
+        if hasattr(df, 'empty') and not df.empty:
+            transformed_df = transform_revenue_thang_nv_cn(df)
+            return {
+                'doanh_thu_thang_nv_cn_data': transformed_df
+            }
+        else:
+            print("DataFrame is empty")
+            return {'doanh_thu_thang_nv_cn_data': {}}
+    else:
+        print("No input data found for revenue employee transformation")
+        print(f"Available keys: {list(input_data.keys()) if input_data else 'None'}")
+        return {'doanh_thu_thang_nv_cn_data': {}}
+    
+transform_revenue_employee_data_op = PythonOperator(
+    task_id='transform_revenue_nv_data',
+    python_callable=transformed_revenue_employee_data,
+    provide_context=True,
+    dag=dag 
+)
+
 # Task 3: Load the transformed data to Cassandra
 def load_invoice_data(**kwargs):
     ti = kwargs['ti']
@@ -194,8 +271,8 @@ def load_revenue_data(**kwargs):
     else:
         print("No revenue data to load")
   
-load_revenue_data_op = PythonOperator(
-    task_id='load_revenue_data',
+load_revenue_branch_data_op = PythonOperator(
+    task_id='load_revenue_branch_data',
     python_callable=load_revenue_data,
     provide_context=True,
     dag=dag
@@ -239,6 +316,60 @@ load_customer_data_op = PythonOperator(
     dag=dag
 )
 
+def load_revenue_employee_data(**kwargs):
+    ti = kwargs['ti']
+    revenue_nv_data = ti.xcom_pull(task_ids='transform_revenue_nv_data')
+    
+    print("Loading 'doanh_thu_thang_nv_cn_data' ...")
+    print(f"Retrieved data: {revenue_nv_data}")  # Debug print
+    
+    if revenue_nv_data and 'doanh_thu_thang_nv_cn_data' in revenue_nv_data:
+        from load_to_cassandra import load_doanhthu_nv_data_optimized
+        transformed_data = revenue_nv_data['doanh_thu_thang_nv_cn_data']
+        print(f"Transformed data: {transformed_data}")  # Debug print
+        
+        if 'doanh_thu_thang_nv_cn' in transformed_data:
+            load_doanhthu_nv_data_optimized(transformed_data['doanh_thu_thang_nv_cn'])
+            print("'doanh_thu_thang_nv_cn' data loaded successfully to Cassandra")
+        else:
+            print("No 'doanh_thu_thang_nv_cn' data in transformed result")
+    else:
+        print("No 'doanh_thu_thang_nv_cn_data' data to load")
+  
+load_revenue_nv_op = PythonOperator(
+    task_id='load_revenue_nv_data',
+    python_callable=load_revenue_employee_data,
+    provide_context=True,
+    dag=dag
+)
+
+def load_revenue_product_data(**kwargs):
+    ti = kwargs['ti']
+    revenue_sp_data = ti.xcom_pull(task_ids='transform_revenue_sp_data')
+    
+    print("Loading 'doanh_thu_sp_quy_cn' data...")
+    print(f"Retrieved data: {revenue_sp_data}")  # Debug print
+    
+    if revenue_sp_data and 'doanh_thu_sp_quy_cn_data' in revenue_sp_data:
+        from load_to_cassandra import load_doanhthu_sp_data_optimized
+        transformed_data = revenue_sp_data['doanh_thu_sp_quy_cn_data']
+        print(f"Transformed data: {transformed_data}")  # Debug print
+        
+        if 'doanh_thu_sp_quy_cn' in transformed_data:
+            load_doanhthu_sp_data_optimized(transformed_data['doanh_thu_sp_quy_cn'])
+            print("'doanh_thu_sp_quy_cn' data loaded successfully to Cassandra")
+        else:
+            print("No 'doanh_thu_sp_quy_cn' data in transformed result")
+    else:
+        print("No 'doanh_thu_sp_quy_cn' data to load")
+  
+load_revenue_product_op = PythonOperator(
+    task_id='load_revenue_sp_data',
+    python_callable=load_revenue_product_data,
+    provide_context=True,
+    dag=dag
+)
+
 def verify_completion(**kwargs):
     print("All data has been successfully loaded to Cassandra")
     return True
@@ -250,11 +381,13 @@ verification_op = PythonOperator(
 )
 
 # Update task dependencies
-setup_connections_op >> [extract_invoice_data_op, extract_revenue_data_op, extract_warehouse_data_op, extract_customer_data_op]
+setup_connections_op >> [extract_invoice_data_op, extract_revenue_brnach_data_op, extract_warehouse_data_op, extract_customer_data_op, extract_revenue_product_data_op, extract_revenue_employee_data_op]
 
 extract_invoice_data_op >> transform_invoice_data_op >> load_invoice_data_op
-extract_revenue_data_op >> transform_revenue_data_op >> load_revenue_data_op
+extract_revenue_brnach_data_op >> transform_revenue_data_op >> load_revenue_branch_data_op
 extract_warehouse_data_op >> transform_warehouse_data_op >> load_warehouse_data_op
 extract_customer_data_op >> transform_customer_data_op >> load_customer_data_op
+extract_revenue_product_data_op >> transform_revenue_product_data_op >> load_revenue_product_op
+extract_revenue_employee_data_op >> transform_revenue_employee_data_op >> load_revenue_nv_op
 
-[load_invoice_data_op, load_revenue_data_op, load_warehouse_data_op, load_customer_data_op] >> verification_op
+[load_invoice_data_op, load_revenue_branch_data_op, load_warehouse_data_op, load_customer_data_op, load_revenue_product_op, load_revenue_nv_op] >> verification_op

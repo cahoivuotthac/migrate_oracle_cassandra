@@ -82,7 +82,7 @@ def load_data_in_batches(params_list, session, prepared, concurrency=25):
 
 def load_user_data_optimized(user_data):
 	try:
-		print(f"user_data type: {type(user_data)}")
+		print(f"Input data type: {type(user_data)}")
 		
 		if user_data.empty:
 			print("Empty user data, nothing to load")
@@ -400,6 +400,90 @@ def load_cus_data_optimized(cus_data):
 		
 	except Exception as e:
 		print(f"Error loading to Cassandra: {e}")
-		traceback.print_exc() 
-
+		traceback.print_exc()
   
+def load_doanhthu_sp_data_optimized(dt_sp_data):
+	print(f"user_data of type {type(dt_sp_data)}")
+	if not isinstance(dt_sp_data, pd.DataFrame):
+		print(f"Expected DataFrame, got {type(dt_sp_data)}")
+		return
+	
+	if dt_sp_data.empty:
+		print('Empty input data, nothing to load')
+		return 
+	
+	try:
+		with get_cassandra_session() as session:
+			if not session:
+				print("No Cassandra session available")
+				return
+
+			prepared_stmt = session.prepare("""
+				INSERT INTO BTL2_data.doanh_thu_sp_quy_cn (
+				  ma_chi_nhanh, 
+				  ma_san_pham, 
+				  nam, 
+				  quy, 
+				  tong_doanh_thu
+				) VALUES (?, ?, ?, ?, ?);
+			""")
+
+			params_list = []
+			for _, row in dt_sp_data.iterrows():
+				params = [
+					row['ma_chi_nhanh'],
+					row['ma_san_pham'],
+					row['nam'],
+					row['quy'],
+					row['tong_doanh_thu']
+				]
+				params_list.append(params)
+
+			load_data_in_batches(params_list, session, prepared_stmt)
+		
+	except Exception as e:
+		print(f"Error loading to Cassandra: {e}")
+		traceback.print_exc()  
+
+def load_doanhthu_nv_data_optimized(dt_nv_data):
+	print(f"user_data of type {type(dt_nv_data)}")
+	if not isinstance(dt_nv_data, pd.DataFrame):
+		print(f"Expected DataFrame, got {type(dt_nv_data)}")
+		return
+	
+	if dt_nv_data.empty:
+		print('Empty input data, nothing to load')
+		return 
+	
+	try:
+		with get_cassandra_session() as session:
+			if not session:
+				print("No Cassandra session available")
+				return
+
+			prepared_stmt = session.prepare("""
+				INSERT INTO BTL2_data.doanh_thu_thang_nv_cn (
+                  ma_chi_nhanh,
+                  ma_nhan_vien,
+                  nam,
+                  thang,
+                  tong_doanh_thu
+                ) VALUES (?, ?, ?, ?, ?)
+			""")
+
+			params_list = []
+			for _, row in dt_nv_data.iterrows():
+				params = [
+					row['ma_chi_nhanh'],
+					row['ma_nhan_vien'],
+					row['nam'],
+					row['thang'],
+					row['tong_doanh_thu']
+				]
+				params_list.append(params)
+
+			load_data_in_batches(params_list, session, prepared_stmt)
+		
+	except Exception as e:
+		print(f"Error loading to Cassandra: {e}")
+		traceback.print_exc()  
