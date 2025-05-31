@@ -44,12 +44,6 @@ setup_conn_task = PythonOperator(
 )
 
 # Task 1: Extract data from Oracle
-# extract_replicated_task = PythonOperator(
-# 	task_id='01_extract_replicated_data_from_oracle',
-# 	python_callable=extract_replicated_data,
-# 	dag=dag 
-# )
-
 extract_data_task = PythonOperator(
 	task_id='extract_data_from_oracle',
 	python_callable=extract_branch_data,
@@ -80,54 +74,20 @@ extract_data_task = PythonOperator(
 # Task 2: Transform the extracted data 
 def transform_data_task(**kwargs):
     ti = kwargs['ti']
-    # replicated_data = ti.xcom_pull(task_ids='01_extract_replicated_data_from_oracle')
-    # branch_data = ti.xcom_pull(task_ids='02_extract_branch_data_from_oracle')
    
     branch_data = ti.xcom_pull(task_ids='extract_data_from_oracle') 
-    # print(f"Extracted replicated data type: {type(replicated_data)}")
     print(f"Extracted branch data type: {type(branch_data)}")
-     
-    # if isinstance(replicated_data, dict):
-    #     user_data = replicated_data.get('user_data')
-    #     product_data = replicated_data.get('product_data')
-    #     attr_product_data = replicated_data.get('attr_product_data')
-    #     cat_product_data = replicated_data.get('cat_product_data')
-        
-    # elif isinstance(replicated_data, (tuple, list)) and len(replicated_data) == 4:
-    #     user_data, product_data, attr_product_data, cat_product_data = replicated_data
-    # else:
-    #     print(f"Unexpected replicated data format: {type(replicated_data)}")
-    #     user_data = product_data = attr_product_data = cat_product_data = pd.DataFrame()
-    
-    # if not isinstance(branch_data, dict):
-    #     print(f"Unexpected branch data format: {type(branch_data)}")
-    #     branch_data = {}
-    
-    # print("Transforming user data...")
-    # transformed_user_data = transform_replicated_data(user_data)
-    
-    # print("Transforming product data...")
-    # transformed_product_data = transform_replicated_data(product_data)
-    
-    # print("Transforming attribute data...")
-    # transformed_attr_product_data = transform_replicated_data(attr_product_data)
-    
-    # print("Transforming category data...")
-    # transformed_cat_product_data = transform_replicated_data(cat_product_data)
-    
     print("Transforming branch data...")
+    
     transformed_branch_data = transform_branch_data(branch_data)
     
     return {
-        # 'user_data': transformed_user_data,
-        # 'product_data': transformed_product_data,
-        # 'attr_product_data': transformed_attr_product_data,
-        # 'cat_product_data': transformed_cat_product_data,
         'invoice_data': transformed_branch_data.get('invoice_data', pd.DataFrame()),
         'revenue_data': transformed_branch_data.get('revenue_data', pd.DataFrame()),
         'warehouse_data': transformed_branch_data.get('warehouse_data', pd.DataFrame()),
         'cus_data': transformed_branch_data.get('cus_data', pd.DataFrame())
     }
+
 
 transform_task = PythonOperator(
 	task_id='transform_data',

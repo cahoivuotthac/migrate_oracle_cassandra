@@ -33,7 +33,6 @@ def execute_query(query):
         return pd.DataFrame()
 
 def extract_replicated_data():
-    
     if not oracle_hook:
         print("Oracle hook not available for invoice data")
         return pd.DataFrame()
@@ -94,7 +93,7 @@ def extract_replicated_data():
   
     return result
 
-def extract_invoice_data():
+def extract_invoice_data()-> pd.Dict:
     if not oracle_hook:
         print("Oracle hook not available for invoice data")
         return pd.DataFrame()
@@ -117,9 +116,12 @@ def extract_invoice_data():
     """
     
     print("Extracting invoice data...")
-    return execute_query(invoice_query)
+    df = execute_query(invoice_query)
+    return {
+        'invoice_query': df
+    }
 
-def extract_revenue_data():
+def extract_revenue_data() -> pd.Dict:
     if not oracle_hook:
         print("Oracle hook not available for revenue data")
         return pd.DataFrame()
@@ -137,9 +139,12 @@ def extract_revenue_data():
     """
     
     print("Extracting revenue data...")
-    return execute_query(revenue_query)
+    df = execute_query(revenue_query)
+    return {
+        'revenue_data': df
+    }
 
-def extract_warehouse_data():
+def extract_warehouse_data() -> pd.Dict:
     if not oracle_hook:
         print("Oracle hook not available for warehouse data")
         return pd.DataFrame()
@@ -162,9 +167,12 @@ def extract_warehouse_data():
     """
     
     print("Extracting warehouse data...")
-    return execute_query(warehouse_query)
+    df = execute_query(warehouse_query)
+    return {
+        'warehouse_data': df
+    }
 
-def extract_customer_data():
+def extract_customer_data() -> pd.Dict:
     if not oracle_hook:
         print("Oracle hook not available for customer data")
         return pd.DataFrame()
@@ -181,27 +189,30 @@ def extract_customer_data():
     """
     
     print("Extracting customer data...")
-    return execute_query(cus_query)
+    df = execute_query(cus_query)
+    return {
+        'customer_data': df
+    }
 
-def extract_branch_data():
-    try: 
-        print("Starting separated data extraction...")
+# def extract_branch_data():
+#     try: 
+#         print("Starting separated data extraction...")
         
-        result = {
-            'invoice_data': extract_invoice_data(),
-            'revenue_data': extract_revenue_data(),
-            'warehouse_data': extract_warehouse_data(),
-            'cus_data': extract_customer_data()
-        }
+#         result = {
+#             'invoice_data': extract_invoice_data(),
+#             'revenue_data': extract_revenue_data(),
+#             'warehouse_data': extract_warehouse_data(),
+#             'cus_data': extract_customer_data()
+#         }
         
-        print("All data extraction completed successfully")
-        return result
+#         print("All data extraction completed successfully")
+#         return result
     
-    except Exception as e: 
-        print(f"Error during branch daa extraction: {e}")
-        return {
-            'invoice_data': pd.DataFrame(),
-            'revenue_data': pd.DataFrame(),
-            'warehouse_data': pd.DataFrame(),
-            'cus_data': pd.DataFrame()
-        }
+#     except Exception as e: 
+#         print(f"Error during branch daa extraction: {e}")
+#         return {
+#             'invoice_data': pd.DataFrame(),
+#             'revenue_data': pd.DataFrame(),
+#             'warehouse_data': pd.DataFrame(),
+#             'cus_data': pd.DataFrame()
+#         }
