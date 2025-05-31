@@ -12,37 +12,6 @@ WITH REPLICATION = {
 
 USE BTL2_data;
 
--- Bảng nhân bản 
--- CREATE TABLE IF NOT EXISTS khachhang (
---   ma_khach_hang int PRIMARY KEY,
---   email text,
---   ho_ten text,
---   sdt text,
---   dia_chi text,
---   ngay_sinh date,
---   gioi_tinh text
--- );
-
--- CREATE TABLE IF NOT EXISTS sanpham (
---   ma_san_pham text PRIMARY KEY,
---   ten_san_pham text,
---   the_loai int,
---   gia bigint
--- );
-
--- CREATE TABLE IF NOT EXISTS thuoctinh_sanpham (
---   ma_san_pham text,
---   ten_thuoc_tinh text,
---   gia_tri_thuoc_tinh text,
---   PRIMARY KEY (ma_san_pham, ten_thuoc_tinh)
--- );
-
--- CREATE TABLE IF NOT EXISTS danhmuc_sanpham (
---   ma_san_pham text,
---   ten_danh_muc text,
---   PRIMARY KEY (ma_san_pham, ten_danh_muc)
--- );
-
 -- Data model tables 
 CREATE TABLE IF NOT EXISTS chi_tiet_hoa_don_theo_ma_kh (
     ma_khach_hang int,
@@ -82,3 +51,20 @@ CREATE TABLE IF NOT EXISTS sl_khach_hang_moi_ngay_theo_ma_cn (
   PRIMARY KEY ((ma_chi_nhanh), ngay)
 ) WITH CLUSTERING ORDER BY (ngay DESC); 
 
+CREATE TABLE doanh_thu_sp_quy_cn (
+  ma_chi_nhanh int,
+  ma_san_pham text,
+  nam int,
+  quy int,
+  tong_doanh_thu bigint,
+  PRIMARY KEY ((ma_chi_nhanh, ma_san_pham), nam, quy)
+) WITH CLUSTERING ORDER BY (nam ASC, quy ASC);
+
+CREATE TABLE doanh_thu_thang_nv_cn (
+  ma_chi_nhanh int,
+  ma_nhan_vien int,
+  nam int,
+  thang int,
+  tong_doanh_thu bigint,
+  PRIMARY KEY ((ma_chi_nhanh, ma_nhan_vien), nam, thang)
+) WITH CLUSTERING ORDER BY (nam ASC, thang ASC);

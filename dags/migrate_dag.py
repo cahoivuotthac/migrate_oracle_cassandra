@@ -14,7 +14,7 @@ from airflow.operators.python import BranchPythonOperator
 sys.path.append('/opt/airflow/scripts')
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
-from extract_oracle_data import extract_invoice_data, extract_revenue_data, extract_warehouse_data, extract_customer_data
+from extract_oracle_data import extract_invoice_data_op, extract_revenue_data_op, extract_warehouse_data_op, extract_customer_data_op
 from transform import transform_invoice_data, transform_revenue_data, transform_warehouse_data, transform_customer_data
 from setup_connections import setup_connections 
 
@@ -37,34 +37,34 @@ dag = DAG(
 	tags=['migration', 'oracle', 'cassandra']
 )
 
-setup_connections = PythonOperator(
+setup_connections_op = PythonOperator(
 	task_id='setup_db_connections',
 	python_callable=setup_connections,
 	dag=dag
 )
 
 # Task 1: Extract data from Oracle
-extract_invoice_data = PythonOperator(
+extract_invoice_data_op = PythonOperator(
 	task_id='extract_invoice_data',
-	python_callable=extract_invoice_data,
+	python_callable=extract_invoice_data_op,
 	dag=dag 
 )
 
-extract_revenue_data = PythonOperator(
+extract_revenue_data_op = PythonOperator(
 	task_id='extract_revenue_data',
-	python_callable=extract_revenue_data,
+	python_callable=extract_revenue_data_op,
 	dag=dag 
 )
 
-extract_warehouse_data = PythonOperator(
+extract_warehouse_data_op = PythonOperator(
 	task_id='extract_warehouse_data',
-	python_callable=extract_warehouse_data,
+	python_callable=extract_warehouse_data_op,
 	dag=dag 
 )
 
-extract_customer_data = PythonOperator(
+extract_customer_data_op = PythonOperator(
 	task_id='extract_customer_data',
-	python_callable=extract_customer_data,
+	python_callable=extract_customer_data_op,
 	dag=dag 
 )
 
@@ -90,7 +90,7 @@ extract_customer_data = PythonOperator(
 # )
 
 # Task 2: Transform the extracted data 
-def transform_invoice_data(**kwargs):
+def transformed_invoice_data(**kwargs):
 	ti = kwargs['ti']
    
 	input_data = ti.xcom_pull(task_ids='extract_invoice_data') 
@@ -101,14 +101,14 @@ def transform_invoice_data(**kwargs):
 		'invoice_data': transform_invoice_data(input_data)
 	}
 	
-transform_invoice_data = PythonOperator(
+transform_invoice_data_op = PythonOperator(
 	task_id='transform_invoice_data',
-	python_callable=transform_invoice_data,
+	python_callable=transformed_invoice_data,
 	provide_context=True,
 	dag=dag 
 )
 
-def transform_revenue_data(**kwargs):
+def transformed_revenue_data(**kwargs):
 	ti = kwargs['ti']
    
 	input_data = ti.xcom_pull(task_ids='extract_revenue_data') 
@@ -119,14 +119,14 @@ def transform_revenue_data(**kwargs):
 		'revenue_data': transform_revenue_data(input_data)
 	}
 	
-transform_revenue_data = PythonOperator(
+transform_revenue_data_op = PythonOperator(
 	task_id='transform_revenue_data',
-	python_callable=transform_revenue_data,
+	python_callable=transformed_revenue_data,
 	provide_context=True,
 	dag=dag 
 )
 
-def transform_warehouse_data(**kwargs):
+def transformed_warehouse_data(**kwargs):
 	ti = kwargs['ti']
    
 	input_data = ti.xcom_pull(task_ids='extract_warehouse_data') 
@@ -137,14 +137,14 @@ def transform_warehouse_data(**kwargs):
 		'warehouse_data': transform_warehouse_data(input_data)
 	}
 	
-transform_warehouse_data = PythonOperator(
+transform_warehouse_data_op = PythonOperator(
 	task_id='transform_warehouse_data',
-	python_callable=transform_warehouse_data,
+	python_callable=transformed_warehouse_data,
 	provide_context=True,
 	dag=dag 
 )
 
-def transform_customer_data(**kwargs):
+def transformed_customer_data(**kwargs):
 	ti = kwargs['ti']
    
 	input_data = ti.xcom_pull(task_ids='extract_customer_data') 
@@ -155,60 +155,106 @@ def transform_customer_data(**kwargs):
 		'customer_data': transform_customer_data(input_data)
 	}
 	
-transform_customer_data = PythonOperator(
+transform_customer_data_op = PythonOperator(
 	task_id='transform_customer_data',
-	python_callable=transform_customer_data,
+	python_callable=transformed_customer_data,
 	provide_context=True,
 	dag=dag 
 )
 
 # Task 3: Load the transformed data to Cassandra
-def load_data(**kwargs):
-	ti = kwargs['ti']
-	
-	invoice_data = ti.xcom_pull(task_ids='transform_invoice_data')
-	revenue_data = ti.xcom_pull(task_ids='transform_revenue_data')
-	warehouse_data = ti.xcom_pull(task_ids='transform_warehouse_data')
-	customer_data = ti.xcom_pull(task_ids='transform_customer_data')
- 
-	from load_to_cassandra import (
-		load_invoice_details_data_optimized,
-		load_revenue_data_optimized,
-		load_wh_data_optimized,
-		load_cus_data_optimized
-	)
-	
-	print("Loading chi_tiet_hoa_don_theo_ma_kh data ...")
-	if invoice_data and 'invoice_data' in invoice_data:
-		load_invoice_details_data_optimized(invoice_data['invoice_data'])
-	
-	print("Loading doanh_thu_moi_ngay_theo_ma_cn data...")
-	if revenue_data and 'revenue_data' in revenue_data:
-		load_revenue_data_optimized(revenue_data['revenue_data'])
-	
-	print("Loading kho_sp_theo_ma_cn data...")
-	if warehouse_data and 'warehouse_data' in warehouse_data:
-		load_wh_data_optimized(warehouse_data['warehouse_data'])
-	
-	print("Loading sl_khach_hang_moi_ngay_theo_ma_cn data...")
-	if customer_data and 'customer_data' in customer_data:
-		load_cus_data_optimized(customer_data['customer_data'])
-	
-	print("All data is loaded successfully to Cassandra")
+def load_invoice_data(**kwargs):
+    ti = kwargs['ti']
+    invoice_data = ti.xcom_pull(task_ids='transform_invoice_data')
+    
+    print("Loading chi_tiet_hoa_don_theo_ma_kh data ...")
+    if invoice_data and 'invoice_data' in invoice_data:
+        from load_to_cassandra import load_invoice_details_data_optimized
+        load_invoice_details_data_optimized(invoice_data['invoice_data'])
+        print("Invoice data loaded successfully to Cassandra")
+    else:
+        print("No invoice data to load")
   
-load_data_to_cassandra= PythonOperator(
-	task_id='load_data_to_cassandra',
-	python_callable=load_data,
-	provide_context=True,
-	dag=dag
+load_invoice_data_op = PythonOperator(
+    task_id='load_invoice_data',
+    python_callable=load_invoice_data,
+    provide_context=True,
+    dag=dag
 )
 
-# Set the task dependencies
-setup_connections >> [extract_invoice_data, extract_revenue_data, extract_warehouse_data, extract_customer_data] \
+def load_revenue_data(**kwargs):
+    ti = kwargs['ti']
+    revenue_data = ti.xcom_pull(task_ids='transform_revenue_data')
+    
+    print("Loading doanh_thu_moi_ngay_theo_ma_cn data...")
+    if revenue_data and 'revenue_data' in revenue_data:
+        from load_to_cassandra import load_revenue_data_optimized
+        load_revenue_data_optimized(revenue_data['revenue_data'])
+        print("Revenue data loaded successfully to Cassandra")
+    else:
+        print("No revenue data to load")
+  
+load_revenue_data_op = PythonOperator(
+    task_id='load_revenue_data',
+    python_callable=load_revenue_data,
+    provide_context=True,
+    dag=dag
+)
 
-extract_invoice_data >> transform_invoice_data 
-extract_revenue_data >> transform_revenue_data
-extract_warehouse_data >> transform_warehouse_data
-extract_customer_data >> transform_customer_data
+def load_warehouse_data(**kwargs):
+    ti = kwargs['ti']
+    warehouse_data = ti.xcom_pull(task_ids='transform_warehouse_data')
+    
+    print("Loading kho_sp_theo_ma_cn data...")
+    if warehouse_data and 'warehouse_data' in warehouse_data:
+        from load_to_cassandra import load_wh_data_optimized
+        load_wh_data_optimized(warehouse_data['warehouse_data'])
+        print("Warehouse data loaded successfully to Cassandra")
+    else:
+        print("No warehouse data to load")
+  
+load_warehouse_data_op = PythonOperator(
+    task_id='load_warehouse_data',
+    python_callable=load_warehouse_data,
+    provide_context=True,
+    dag=dag
+)
 
-[transform_invoice_data, transform_revenue_data, transform_warehouse_data, transform_customer_data] >> load_data_to_cassandra
+def load_customer_data(**kwargs):
+    ti = kwargs['ti']
+    customer_data = ti.xcom_pull(task_ids='transform_customer_data')
+    
+    print("Loading sl_khach_hang_moi_ngay_theo_ma_cn data...")
+    if customer_data and 'customer_data' in customer_data:
+        from load_to_cassandra import load_cus_data_optimized
+        load_cus_data_optimized(customer_data['customer_data'])
+        print("Customer data loaded successfully to Cassandra")
+    else:
+        print("No customer data to load")
+  
+load_customer_data_op = PythonOperator(
+    task_id='load_customer_data',
+    python_callable=load_customer_data,
+    provide_context=True,
+    dag=dag
+)
+
+def verify_completion(**kwargs):
+    print("All data has been successfully loaded to Cassandra")
+    return True
+
+verification_op = PythonOperator(
+    task_id='verification',
+    python_callable=verify_completion,
+    dag=dag
+)
+
+# Update task dependencies
+setup_connections_op >> [extract_invoice_data_op, extract_revenue_data_op, extract_warehouse_data_op, extract_customer_data_op]
+
+extract_invoice_data_op >> transform_invoice_data_op >> load_invoice_data_op
+extract_revenue_data_op >> transform_revenue_data_op >> load_revenue_data_op
+extract_warehouse_data_op >> transform_warehouse_data_op >> load_warehouse_data_op
+extract_customer_data_op >> transform_customer_data_op >> load_customer_data_op
+
+[load_invoice_data_op, load_revenue_data_op, load_warehouse_data_op, load_customer_data_op] >> verification_op

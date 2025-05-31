@@ -49,6 +49,46 @@ FROM "NhanVien" NV
 GROUP BY NV."MaChiNhanh", TRUNC(HD."NgayTao")
 ORDER BY Ngay DESC;
 
+--Doanh thu của mỗi sản phẩm tại mỗi chi nhánh, theo từng quý và từng năm
+--doanh_thu_sp_quy_cn
+SELECT
+  KQL."MaChiNhanh",
+  SP."MaSanPham",
+  EXTRACT(YEAR FROM HD."NgayTao") AS Nam,
+  EXTRACT(QUARTER FROM HD."NgayTao") AS Quy,
+  SUM(CT."ThanhTien") AS DoanhThu
+FROM
+  "HoaDon" HD
+  JOIN "ChiTietHoaDon" CT ON HD."MaHoaDon" = CT."MaHoaDon"
+  JOIN "SanPham" SP ON SP."MaSanPham" = CT."MaSanPham"
+  JOIN "NhanVien" NV ON NV."MaNhanVien" = HD."MaNhanVien"
+  JOIN "ChiNhanh" KQL ON NV."MaChiNhanh" = KQL."MaChiNhanh"
+GROUP BY
+  KQL."MaChiNhanh",
+  SP."MaSanPham",
+  EXTRACT(YEAR FROM HD."NgayTao"),
+  EXTRACT(QUARTER FROM HD."NgayTao")
+ORDER BY
+  KQL."MaChiNhanh", SP."MaSanPham", Nam, Quy;
 
+--Doanh thu theo tháng của mỗi nhân viên ở từng chi nhánh
+--doanh_thu_thang_nv_cn
+SELECT
+  NV."MaChiNhanh",
+  NV."MaNhanVien",
+  EXTRACT(YEAR FROM HD."NgayTao") AS Nam,
+  EXTRACT(MONTH FROM HD."NgayTao") AS Thang,
+  SUM(CT."ThanhTien") AS DoanhThu
+FROM
+  "HoaDon" HD
+  JOIN "ChiTietHoaDon" CT ON HD."MaHoaDon" = CT."MaHoaDon"
+  JOIN "NhanVien" NV ON HD."MaNhanVien" = NV."MaNhanVien"
+GROUP BY
+  NV."MaChiNhanh",
+  NV."MaNhanVien",
+  EXTRACT(YEAR FROM HD."NgayTao"),
+  EXTRACT(MONTH FROM HD."NgayTao")
+ORDER BY
+  NV."MaChiNhanh", NV."MaNhanVien", Nam, Thang;
 
 

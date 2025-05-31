@@ -31,7 +31,7 @@ def execute_query(query):
         print(f"Error extracting Oracle data: {e}")
         return pd.DataFrame()
 
-def extract_invoice_data():
+def extract_invoice_data_op():
     if not oracle_hook:
         print("Oracle hook not available for invoice data")
         return pd.DataFrame()
@@ -59,7 +59,7 @@ def extract_invoice_data():
         'invoice_data': df
     }
 
-def extract_revenue_data():
+def extract_revenue_data_op():
     if not oracle_hook:
         print("Oracle hook not available for revenue data")
         return pd.DataFrame()
@@ -82,7 +82,7 @@ def extract_revenue_data():
         'revenue_data': df
     }
 
-def extract_warehouse_data():
+def extract_warehouse_data_op():
     if not oracle_hook:
         print("Oracle hook not available for warehouse data")
         return pd.DataFrame()
@@ -110,7 +110,7 @@ def extract_warehouse_data():
         'warehouse_data': df
     }
 
-def extract_customer_data():
+def extract_customer_data_op():
     if not oracle_hook:
         print("Oracle hook not available for customer data")
         return pd.DataFrame()
@@ -131,3 +131,4 @@ def extract_customer_data():
     return {
         'customer_data': df
     }
+    

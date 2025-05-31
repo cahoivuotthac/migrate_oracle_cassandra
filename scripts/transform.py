@@ -10,28 +10,30 @@ def transform_data(input_data, k_name, num_cols, str_cols, datetime_cols, cols_m
         transformed_df = {}
         
         if k_name in input_data:
-            tmp_df = input_data.copy()
+            tmp_df = pd.DataFrame(input_data[k_name].copy())
             tmp_df.columns = tmp_df.columns.str.lower()
             
             tmp_df.rename(columns=cols_mapping, inplace=True)
             
             if datetime_cols: 
                 for col in datetime_cols:
-                    if col in input_data.columns:
-                        input_data[col] = pd.to_datetime(input_data[col], errors='coerce')
-                        input_data[col] = input_data[col].apply(lambda x: int(x.timestamp()) if pd.notnull(x) else None)
+                    if col in tmp_df.columns:
+                        tmp_df[col] = pd.to_datetime(tmp_df[col], errors='coerce')
+                        tmp_df[col] =  tmp_df[col].apply(lambda x: int(x.timestamp()) if pd.notnull(x) else None)
             if num_cols:
                 for col in num_cols:
-                    if col in input_data.columns:
-                        input_data[col] = pd.to_numeric(input_data[col], errors='coerce').fillna(0)
+                    if col in tmp_df.columns:
+                        tmp_df[col] = pd.to_numeric(tmp_df[col], errors='coerce').fillna(0)
             
             if str_cols:        
                 for col in str_cols:
-                    if col in input_data.columns:
-                        input_data[col] = input_data[col].astype(str).str.strip()
+                    if col in tmp_df.columns:
+                        tmp_df[col] =  tmp_df[col].astype(str).str.strip()
                     
-        transformed_df[k_name] = transformed_df
-            
+            transformed_df[k_name] = tmp_df
+        
+        return transformed_df
+    
     except Exception as e: 
         print(f"Error transforming {k_name} data: {e}")
         import traceback
