@@ -19,7 +19,10 @@ def transform_data(input_data, k_name, num_cols, str_cols, datetime_cols, cols_m
                 for col in datetime_cols:
                     if col in tmp_df.columns:
                         tmp_df[col] = pd.to_datetime(tmp_df[col], errors='coerce')
-                        tmp_df[col] =  tmp_df[col].apply(lambda x: int(x.timestamp()) if pd.notnull(x) else None)
+                        tmp_df[col] = tmp_df[col].apply(
+                            lambda x: x.strftime('%Y-%m-%d %H:%M:%S') if pd.notnull(x) else None
+                        )
+                        
             if num_cols:
                 for col in num_cols:
                     if col in tmp_df.columns:
@@ -104,6 +107,16 @@ def transform_customer_data(customer_df):
     
     return transform_data(customer_df, 'customer_data', num_cols, None, datetime_cols, customer_mapping)
 
+# def transform_doanh_thu_sp_quy_cn(doanhthu_sp_df):
+#     cols_mapping = {
+#         'machinhanh': 'ma_chi_nhanh',
+#         'masanpham': 'ma_san_pham',
+#         'nam': 'nam',
+#         'quy': 'quy',
+#         'thanhtien': 'thanh_tien'
+#     }
+    
+#     num_cols = ['nam', 'quy', 'ma_chi_nhanh', 'thanh_tien']
 # def transform_branch_data(separated_data):
 #     try:
 #         if not separated_data or not isinstance(separated_data, dict):

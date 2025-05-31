@@ -31,7 +31,7 @@ def execute_query(query):
         print(f"Error extracting Oracle data: {e}")
         return pd.DataFrame()
 
-def extract_invoice_data_op():
+def extract_invoice_data():
     if not oracle_hook:
         print("Oracle hook not available for invoice data")
         return pd.DataFrame()
@@ -59,7 +59,7 @@ def extract_invoice_data_op():
         'invoice_data': df
     }
 
-def extract_revenue_data_op():
+def extract_revenue_data():
     if not oracle_hook:
         print("Oracle hook not available for revenue data")
         return pd.DataFrame()
@@ -82,7 +82,7 @@ def extract_revenue_data_op():
         'revenue_data': df
     }
 
-def extract_warehouse_data_op():
+def extract_warehouse_data():
     if not oracle_hook:
         print("Oracle hook not available for warehouse data")
         return pd.DataFrame()
@@ -110,7 +110,7 @@ def extract_warehouse_data_op():
         'warehouse_data': df
     }
 
-def extract_customer_data_op():
+def extract_customer_data():
     if not oracle_hook:
         print("Oracle hook not available for customer data")
         return pd.DataFrame()
@@ -132,3 +132,99 @@ def extract_customer_data_op():
         'customer_data': df
     }
     
+def extract_doanh_thu_thang_nv_cn():
+    if not oracle_hook:
+        print("Oracle hook not available for customer data")
+        return pd.DataFrame()
+    
+    cus_query = """
+        SELECT
+          KQL."MaChiNhanh",
+          SP."MaSanPham",
+          EXTRACT(YEAR FROM HD."NgayTao") AS Nam,
+          EXTRACT(QUARTER FROM HD."NgayTao") AS Quy,
+          SUM(CT."ThanhTien") AS DoanhThu
+        FROM
+          "HoaDon" HD
+          JOIN "ChiTietHoaDon" CT ON HD."MaHoaDon" = CT."MaHoaDon"
+          JOIN "SanPham" SP ON SP."MaSanPham" = CT."MaSanPham"
+          JOIN "NhanVien" NV ON NV."MaNhanVien" = HD."MaNhanVien"
+          JOIN "ChiNhanh" KQL ON NV."MaChiNhanh" = KQL."MaChiNhanh"
+        GROUP BY
+          KQL."MaChiNhanh",
+          SP."MaSanPham",
+          EXTRACT(YEAR FROM HD."NgayTao"),
+          EXTRACT(QUARTER FROM HD."NgayTao")
+        ORDER BY
+          KQL."MaChiNhanh", SP."MaSanPham", Nam, Quy
+    """  
+    
+    print("Extracting doanh_thu_sp_quy_cn data...")
+    df = execute_query(cus_query)
+    return {
+        ' doanh_thu_sp_quy_cn_data': df
+    }
+    
+def extract_doanh_thu_sp_quy_cn():
+    if not oracle_hook:
+        print("Oracle hook not available for customer data")
+        return pd.DataFrame()
+    
+    cus_query = """
+        SELECT
+          KQL."MaChiNhanh",
+          SP."MaSanPham",
+          EXTRACT(YEAR FROM HD."NgayTao") AS Nam,
+          EXTRACT(QUARTER FROM HD."NgayTao") AS Quy,
+          SUM(CT."ThanhTien") AS DoanhThu
+        FROM
+          "HoaDon" HD
+          JOIN "ChiTietHoaDon" CT ON HD."MaHoaDon" = CT."MaHoaDon"
+          JOIN "SanPham" SP ON SP."MaSanPham" = CT."MaSanPham"
+          JOIN "NhanVien" NV ON NV."MaNhanVien" = HD."MaNhanVien"
+          JOIN "ChiNhanh" KQL ON NV."MaChiNhanh" = KQL."MaChiNhanh"
+        GROUP BY
+          KQL."MaChiNhanh",
+          SP."MaSanPham",
+          EXTRACT(YEAR FROM HD."NgayTao"),
+          EXTRACT(QUARTER FROM HD."NgayTao")
+        ORDER BY
+          KQL."MaChiNhanh", SP."MaSanPham", Nam, Quy
+    """  
+    
+    print("Extracting doanh_thu_sp_quy_cn data...")
+    df = execute_query(cus_query)
+    return {
+        ' doanh_thu_sp_quy_cn_data': df
+    }
+    
+def extract_doanh_thu_thang_nv_cn():
+    if not oracle_hook:
+        print("Oracle hook not available for customer data")
+        return pd.DataFrame()
+    
+    cus_query = """
+        SELECT
+          NV."MaChiNhanh",
+          NV."MaNhanVien",
+          EXTRACT(YEAR FROM HD."NgayTao") AS Nam,
+          EXTRACT(MONTH FROM HD."NgayTao") AS Thang,
+          SUM(CT."ThanhTien") AS DoanhThu
+        FROM
+          "HoaDon" HD
+          JOIN "ChiTietHoaDon" CT ON HD."MaHoaDon" = CT."MaHoaDon"
+          JOIN "NhanVien" NV ON HD."MaNhanVien" = NV."MaNhanVien"
+        GROUP BY
+          NV."MaChiNhanh",
+          NV."MaNhanVien",
+          EXTRACT(YEAR FROM HD."NgayTao"),
+          EXTRACT(MONTH FROM HD."NgayTao")
+        ORDER BY
+          NV."MaChiNhanh", NV."MaNhanVien", Nam, Thang
+    """  
+    
+    print("Extracting doanh_thu_thang_nv_cn data...")
+    df = execute_query(cus_query)
+    return {
+        ' doanh_thu_thang_nv_cn_data': df
+    }

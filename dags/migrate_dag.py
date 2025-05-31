@@ -14,7 +14,7 @@ from airflow.operators.python import BranchPythonOperator
 sys.path.append('/opt/airflow/scripts')
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'scripts'))
 
-from extract_oracle_data import extract_invoice_data_op, extract_revenue_data_op, extract_warehouse_data_op, extract_customer_data_op
+from extract_oracle_data import extract_invoice_data, extract_revenue_data, extract_warehouse_data, extract_customer_data
 from transform import transform_invoice_data, transform_revenue_data, transform_warehouse_data, transform_customer_data
 from setup_connections import setup_connections 
 
@@ -46,25 +46,25 @@ setup_connections_op = PythonOperator(
 # Task 1: Extract data from Oracle
 extract_invoice_data_op = PythonOperator(
 	task_id='extract_invoice_data',
-	python_callable=extract_invoice_data_op,
+	python_callable=extract_invoice_data,
 	dag=dag 
 )
 
 extract_revenue_data_op = PythonOperator(
 	task_id='extract_revenue_data',
-	python_callable=extract_revenue_data_op,
+	python_callable=extract_revenue_data,
 	dag=dag 
 )
 
 extract_warehouse_data_op = PythonOperator(
 	task_id='extract_warehouse_data',
-	python_callable=extract_warehouse_data_op,
+	python_callable=extract_warehouse_data,
 	dag=dag 
 )
 
 extract_customer_data_op = PythonOperator(
 	task_id='extract_customer_data',
-	python_callable=extract_customer_data_op,
+	python_callable=extract_customer_data,
 	dag=dag 
 )
 
@@ -170,7 +170,7 @@ def load_invoice_data(**kwargs):
     print("Loading chi_tiet_hoa_don_theo_ma_kh data ...")
     if invoice_data and 'invoice_data' in invoice_data:
         from load_to_cassandra import load_invoice_details_data_optimized
-        load_invoice_details_data_optimized(invoice_data['invoice_data'])
+        load_invoice_details_data_optimized(invoice_data['invoice_data'].get('invoice_data'))
         print("Invoice data loaded successfully to Cassandra")
     else:
         print("No invoice data to load")
@@ -189,7 +189,7 @@ def load_revenue_data(**kwargs):
     print("Loading doanh_thu_moi_ngay_theo_ma_cn data...")
     if revenue_data and 'revenue_data' in revenue_data:
         from load_to_cassandra import load_revenue_data_optimized
-        load_revenue_data_optimized(revenue_data['revenue_data'])
+        load_revenue_data_optimized(revenue_data['revenue_data'].get('revenue_data'))
         print("Revenue data loaded successfully to Cassandra")
     else:
         print("No revenue data to load")
@@ -208,7 +208,7 @@ def load_warehouse_data(**kwargs):
     print("Loading kho_sp_theo_ma_cn data...")
     if warehouse_data and 'warehouse_data' in warehouse_data:
         from load_to_cassandra import load_wh_data_optimized
-        load_wh_data_optimized(warehouse_data['warehouse_data'])
+        load_wh_data_optimized(warehouse_data['warehouse_data'].get('warehouse_data'))
         print("Warehouse data loaded successfully to Cassandra")
     else:
         print("No warehouse data to load")
@@ -227,7 +227,7 @@ def load_customer_data(**kwargs):
     print("Loading sl_khach_hang_moi_ngay_theo_ma_cn data...")
     if customer_data and 'customer_data' in customer_data:
         from load_to_cassandra import load_cus_data_optimized
-        load_cus_data_optimized(customer_data['customer_data'])
+        load_cus_data_optimized(customer_data['customer_data'].get('customer_data'))
         print("Customer data loaded successfully to Cassandra")
     else:
         print("No customer data to load")
