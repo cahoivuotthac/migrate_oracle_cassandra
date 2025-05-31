@@ -97,7 +97,7 @@ services:
       - "9042:9042"
     environment:
       # Default single-node settings
-      CASSANDRA_CLUSTER_NAME: "BTL2_cluster"
+      CASSANDRA_CLUSTER_NAME: "BTL2_cluster_2"
       CASSANDRA_DC: "DC_2"
       CASSANDRA_RACK: "rack1"
     volumes:
