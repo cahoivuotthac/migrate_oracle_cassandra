@@ -44,6 +44,42 @@ def get_cassandra_session():
 		if cluster:
 			cluster.shutdown()
 
+def load_data_in_batches(params_list, session, prepared, concurrency=25):
+	try: 
+		total_batches = len(params_list) // BATCH_SIZE + (1 if len(params_list) % BATCH_SIZE else 0)
+				
+		for i in range(0, len(params_list), BATCH_SIZE):
+			batch_params = params_list[i:i + BATCH_SIZE]
+			print(f"Processing batch {i//BATCH_SIZE + 1}/{total_batches}")
+			
+			results = execute_concurrent_with_args(
+				session, 
+				prepared, 
+				batch_params,
+				concurrency,
+				raise_on_first_error=False
+			)
+			
+			errors = []
+			for j, (success, result) in enumerate(results):
+				if not success:
+					batch_index = i + j
+					error_msg = str(result) if result else "Unknown error"
+					print(f"Error at record {batch_index}: {error_msg}")
+					if batch_index < len(params_list):
+						print(f"Failed parameters: {params_list[batch_index]}")
+					errors.append(result)
+			
+			if errors:
+				print(f"Errors in batch: {len(errors)}")
+				# Print first few errors for debugging
+				for idx, error in enumerate(errors[:3]):  # Show first 3 errors
+					print(f"Error {idx + 1}: {error}")
+		
+		print(f"Successfully processed {len(params_list)} categories to Cassandra")
+	except Exception as e: 
+		print(f"Error: {e}")
+
 def load_user_data_optimized(user_data):
 	try:
 		print(f"user_data type: {type(user_data)}")
@@ -197,42 +233,6 @@ def load_cat_product_data_optimized(cat_product_data):
 		print(f"Error loading categories to Cassandra: {e}")
 		traceback.print_exc()
 
-def load_data_in_batches(params_list, session, prepared, concurrency=25):
-	try: 
-		total_batches = len(params_list) // BATCH_SIZE + (1 if len(params_list) % BATCH_SIZE else 0)
-				
-		for i in range(0, len(params_list), BATCH_SIZE):
-			batch_params = params_list[i:i + BATCH_SIZE]
-			print(f"Processing batch {i//BATCH_SIZE + 1}/{total_batches}")
-			
-			results = execute_concurrent_with_args(
-				session, 
-				prepared, 
-				batch_params,
-				concurrency,
-				raise_on_first_error=False
-			)
-			
-			errors = []
-			for j, (success, result) in enumerate(results):
-				if not success:
-					batch_index = i + j
-					error_msg = str(result) if result else "Unknown error"
-					print(f"Error at record {batch_index}: {error_msg}")
-					if batch_index < len(params_list):
-						print(f"Failed parameters: {params_list[batch_index]}")
-					errors.append(result)
-			
-			if errors:
-				print(f"Errors in batch: {len(errors)}")
-				# Print first few errors for debugging
-				for idx, error in enumerate(errors[:3]):  # Show first 3 errors
-					print(f"Error {idx + 1}: {error}")
-		
-		print(f"Successfully processed {len(params_list)} categories to Cassandra")
-	except Exception as e: 
-		print(f"Error: {e}")
-			
 def load_invoice_details_data_optimized(invoice_data):
 	print(f"invoice_data of type {type(invoice_data)}")
 	if not isinstance(invoice_data, pd.DataFrame):

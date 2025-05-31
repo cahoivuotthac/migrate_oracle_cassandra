@@ -18,8 +18,7 @@ def execute_query(query):
     try: 
         data = pd.read_sql(
             query, 
-            oracle_hook.get_conn(),
-            # encoding='utf-8'
+            oracle_hook.get_conn() 
         )
         
         print(f"Successfully extracted {len(data)} rows from Oracle")
@@ -32,68 +31,7 @@ def execute_query(query):
         print(f"Error extracting Oracle data: {e}")
         return pd.DataFrame()
 
-def extract_replicated_data():
-    if not oracle_hook:
-        print("Oracle hook not available for invoice data")
-        return pd.DataFrame()
-    
-    user_data = pd.DataFrame()
-    product_data = pd.DataFrame()
-    attr_product_data = pd.DataFrame()
-    cat_product_data = pd.DataFrame()
-    
-    if oracle_hook:
-        user_query = """
-            SELECT 
-                "MaKhachHang",
-                "Email",
-                "HoTen",
-                "SDT",
-                "DiaChi",
-                "GioiTinh",
-                "NgaySinh"
-            FROM "BTL1"."KhachHang"
-        """ 
-
-        product_query = """
-            SELECT 
-                "MaSanPham",
-                "TenSanPham",
-                "TheLoai",
-                "Gia"
-            FROM "BTL1"."SanPham"
-        """
-    
-        attr_product_query = """
-            SELECT 
-                "MaSanPham",
-                "TenThuocTinh",
-                "GiaTriThuocTinh"
-            FROM "BTL1"."ThuocTinh_SanPham"
-        """
-     
-        cat_product_query = """
-            SELECT 
-                "MaSanPham",
-                "TenDanhMuc"
-            FROM "BTL1"."DanhMuc_SanPham"
-        """
-    
-        user_data = execute_query(user_query)
-        product_data = execute_query(product_query)
-        attr_product_data = execute_query(attr_product_query)
-        cat_product_data = execute_query(cat_product_query)
-  
-    result = {
-        'user_data': user_data,
-        'product_data': product_data,
-        'attr_product_data': attr_product_data,
-        'cat_product_data': cat_product_data
-    }
-  
-    return result
-
-def extract_invoice_data()-> pd.Dict:
+def extract_invoice_data():
     if not oracle_hook:
         print("Oracle hook not available for invoice data")
         return pd.DataFrame()
@@ -118,10 +56,10 @@ def extract_invoice_data()-> pd.Dict:
     print("Extracting invoice data...")
     df = execute_query(invoice_query)
     return {
-        'invoice_query': df
+        'invoice_data': df
     }
 
-def extract_revenue_data() -> pd.Dict:
+def extract_revenue_data():
     if not oracle_hook:
         print("Oracle hook not available for revenue data")
         return pd.DataFrame()
@@ -144,7 +82,7 @@ def extract_revenue_data() -> pd.Dict:
         'revenue_data': df
     }
 
-def extract_warehouse_data() -> pd.Dict:
+def extract_warehouse_data():
     if not oracle_hook:
         print("Oracle hook not available for warehouse data")
         return pd.DataFrame()
@@ -172,7 +110,7 @@ def extract_warehouse_data() -> pd.Dict:
         'warehouse_data': df
     }
 
-def extract_customer_data() -> pd.Dict:
+def extract_customer_data():
     if not oracle_hook:
         print("Oracle hook not available for customer data")
         return pd.DataFrame()
@@ -193,26 +131,3 @@ def extract_customer_data() -> pd.Dict:
     return {
         'customer_data': df
     }
-
-# def extract_branch_data():
-#     try: 
-#         print("Starting separated data extraction...")
-        
-#         result = {
-#             'invoice_data': extract_invoice_data(),
-#             'revenue_data': extract_revenue_data(),
-#             'warehouse_data': extract_warehouse_data(),
-#             'cus_data': extract_customer_data()
-#         }
-        
-#         print("All data extraction completed successfully")
-#         return result
-    
-#     except Exception as e: 
-#         print(f"Error during branch daa extraction: {e}")
-#         return {
-#             'invoice_data': pd.DataFrame(),
-#             'revenue_data': pd.DataFrame(),
-#             'warehouse_data': pd.DataFrame(),
-#             'cus_data': pd.DataFrame()
-#         }
